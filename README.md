@@ -105,16 +105,34 @@ _main_
 La rama main siempre debe contener código estable y funcional.
 
 Convención de ramas
-Features
+
+### Features
+
 feature/landing-page
 feature/auth-system
 feature/orders-module
 feature/inventory-module
-Fixes
+
+### Fixes
+
 fix/login-validation
 fix/mobile-navbar
-Refactor
+
+### Refactor
+
 refactor/api-structure
+
+### Docs
+
+docs/api-documentation
+
+### Chore
+
+chore/septup-eslint
+
+### Test
+
+test/auth-service
 
 ## ⚙️ Instalación
 
