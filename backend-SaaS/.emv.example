@@ -1,1 +1,2 @@
-DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.xhxfxrhtwfyykgtgdjlg.supabase.co:5432/postgres"
+SUPABASE_URL="URL_ejemplo"
+SUPABASE_KEY="ANON_KEY"

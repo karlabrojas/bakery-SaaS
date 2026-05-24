@@ -1,25 +1,37 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+import { createClient } from "@supabase/supabase-js";
+
+dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
 
 app.use(express.json());
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_KEY!
+);
 app.post("/orders", async (req, res) => {
   try {
     const { nombre } = req.body;
-    const order = await prisma.order.create({
-      data: {
-        nombre,
-      },
-    });
-    res.json(order);
+    const { data, error } = await supabase
+      .from("orders")
+      .insert([
+        {
+          nombre
+        }
+      ]);
+    if (error) {
+      return res.status(500).json(error);
+    }
+    res.json(data);
   } catch (error) {
     res.status(500).json({
-      error: "Error al guardar"
+      error: "Error del servidor"
     });
   }
 });
+
 app.listen(3000, () => {
-  console.log("Servidor corriendo en puerto 3000");
+  console.log("Servidor corriendo");
 });
