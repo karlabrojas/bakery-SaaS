@@ -2,11 +2,11 @@ import Image from "next/image";
 
 export default function LandingPage() {
   return (
-    <section className="bg-[#F5E6D3] px-6 py-10 md:py-14 rounded-2xl">
+    <section className=" px-6 py-10 md:py-14 rounded-2xl">
       <div className="flex flex-col md:flex-row items-center gap-8 max-w-4xl mx-auto">
     
         <div className="flex-1">
-          <h2 className="text-4xl font-bold mb-5 ">
+          <h2 className="text-4xl font-bold mb-5">
             Mejora la gestión<br />de tu negocio
           </h2>
 
