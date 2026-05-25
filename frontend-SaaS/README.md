@@ -56,30 +56,89 @@ El objetivo principal es ofrecer una interfaz moderna e intuitiva para gestionar
 - Axios
 - React Hooks
 
+## Arquitectura
+
+**Feature-Based + Component Driven**
+
 ## 📂 Estructura del proyecto
 
-src/
+frontend-SaaS/
+│
+├── public/
 │
 ├── app/
+│ ├── landing/
+│ │ └── page.tsx
+│ │
 │ ├── dashboard/
 │ ├── inventory/
 │ ├── orders/
 │ ├── sales/
-│ ├── login/
-│ ├── landing/
+│ ├── auth/
+│ ├── layout.tsx
 │ └── page.tsx
 │
+├── features/
+│ │
+│ ├── landing/
+│ │ ├── components/
+│ │ ├── hooks/
+│ │ ├── services/
+│ │ └── types/
+│ │
+│ ├── orders/
+│ │ ├── components/
+│ │ ├── hooks/
+│ │ ├── services/
+│ │ └── types/
+│ │
+│ ├── inventory/
+│ │
+│ ├── sales/
+│ │
+│ └── dashboard/
+│
 ├── components/
+│ ├── ui/
+│ │ ├── Button/
+│ │ ├── Input/
+│ │ ├── Card/
+│ │ └── Modal/
+│ │
+│ └── layout/
 │
-├── services/
-│
-├── hooks/
+├── lib/
 │
 ├── context/
 │
+├── styles/
+│
 ├── types/
 │
-└── styles/
+├── utils/
+│
+├── .env.local
+└── package.json
+
+### Ejemplo de estructura
+
+features/orders/
+│
+├── components/
+│ ├── OrderCard.tsx
+│ ├── OrderTable.tsx
+│ └── OrderForm.tsx
+│
+├── hooks/
+│ └── useOrders.ts
+│
+├── services/
+│ └── orders.service.ts
+│
+├── types/
+│ └── order.types.ts
+│
+└── utils/
 
 ## ⚙️ Instalación
 
