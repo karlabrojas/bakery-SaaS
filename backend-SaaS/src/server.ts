@@ -3,35 +3,38 @@ import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
-
 const app = express();
 
 app.use(express.json());
+
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_KEY!
+  process.env.SUPABASE_KEY!,
 );
 app.post("/orders", async (req, res) => {
   try {
-    const { nombre } = req.body;
+    const { name, email, problem } = req.body;
+
     const { data, error } = await supabase
-      .from("orders")
+      .from("landing_data")
       .insert([
         {
-          nombre
-        }
-      ]);
+          name,
+          email,
+          problem,
+        },
+      ])
+      .select();
     if (error) {
       return res.status(500).json(error);
     }
-    res.json(data);
+    res.status(201).json(data);
   } catch (error) {
     res.status(500).json({
-      error: "Error del servidor"
+      error: "Error del servidor",
     });
   }
 });
-
 app.listen(3000, () => {
-  console.log("Servidor corriendo");
+  console.log("Servidor corriendo en puerto 3000");
 });
