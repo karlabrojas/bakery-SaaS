@@ -16,7 +16,7 @@ export default function LandingPage() {
             </p>
 
             <a
-                href="#"
+                href="/informacion"
                 className="inline-block bg-[#C97B4B] hover:bg-[#A85E35] text-white font-bold text-sm px-6 py-3 rounded-lg transition-colors duration-200"
             >
             Quiero saber más...
