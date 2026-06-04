@@ -33,7 +33,7 @@ El backend permite:
 - Actualización de stock.
 - Entradas y salidas básicas.
 
-### 💰 Ventas
+### Ventas
 
 - Registro de ventas.
 - Historial básico.
