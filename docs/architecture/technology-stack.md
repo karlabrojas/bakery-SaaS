@@ -159,6 +159,29 @@ Facilita la interacción con PostgreSQL mediante modelos tipados y migraciones c
 - Integración con TypeScript.
 - Productividad elevada.
 
+# Caché / Sesiones
+
+## Redis
+
+### Descripción
+
+Redis es una base de datos NoSQL en memoria orientada a estructuras clave-valor, diseñada para ofrecer
+tiempos de respuesta extremadamente rápidos.
+
+### Justificación
+
+Se seleccionó Redis para complementar el esquema de autenticación basado en JWT y Refresh Token Rotation
+debido a su alto rendimiento y capacidad para gestionar información temporal de manera eficiente.
+
+### Beneficios
+
+- Alto rendimiento.
+- Gestión eficiente de sesiones.
+- Invalidación inmediata de tokens.
+- Soporte para Refresh Token Rotation.
+- Escalabilidad.
+- Expiración automática.
+
 # Autenticación
 
 ## JWT + Refresh Tokens
