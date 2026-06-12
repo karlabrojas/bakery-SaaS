@@ -33,7 +33,7 @@ El backend permite:
 - Actualización de stock.
 - Entradas y salidas básicas.
 
-### 💰 Ventas
+### Ventas
 
 - Registro de ventas.
 - Historial básico.
@@ -56,26 +56,32 @@ El backend permite:
 ## 📂 Estructura del proyecto
 
 src/
-│
-├── controllers/
-│
-├── routes/
-│
-├── middleware/
-│
-├── services/
-│
-├── prisma/
+├── modules/
+│ ├── auth/
+│ │ ├── controllers/
+│ │ ├── routes/
+│ │ ├── services/
+│ │ ├── entities/
+│ │ └── validations/
+│ │
+│ ├── orders/
+│ │ ├── controllers/
+│ │ ├── routes/
+│ │ ├── services/
+│ │ ├── entities/
+│ │ └── validations/
+│ │
+│ ├── inventory/
+│ ├── sales/
+│ └── reports/
 │
 ├── config/
-│
+├── middleware/
+├── prisma/
 ├── utils/
-│
 ├── types/
-│
-├── server.ts
-│
-└── app.ts
+├── app.ts
+└── server.ts
 
 ## ⚙️ Instalación
 
