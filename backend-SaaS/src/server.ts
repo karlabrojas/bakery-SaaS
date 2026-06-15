@@ -3,12 +3,13 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 
+import saleRoutes from "../routes/saleRoutes";
+
 dotenv.config();
 
 const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
 const supabase = createClient(
@@ -16,19 +17,21 @@ const supabase = createClient(
   process.env.SUPABASE_KEY!,
 );
 
+// Ruta principal
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    message: "Bakery SaaS API funcionando",
+  });
+});
+
+// Landing Page
 app.post("/orders", async (req, res) => {
   try {
     const { name, email, problem } = req.body;
 
     const { data, error } = await supabase
       .from("landing_data")
-      .insert([
-        {
-          name,
-          email,
-          problem,
-        },
-      ])
+      .insert([{ name, email, problem }])
       .select();
 
     if (error) {
@@ -47,6 +50,11 @@ app.post("/orders", async (req, res) => {
   }
 });
 
-app.listen(4000, () => {
-  console.log("Servidor corriendo en puerto 3000");
+// Módulo de Ventas
+app.use("/api/sales", saleRoutes);
+
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
