@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
-
+import WebSocket from "ws";
 import saleRoutes from "./routes/saleRoutes";
 
 dotenv.config();
@@ -12,9 +12,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_KEY!,
+const supabase = createClient(process.env.SUPABASE_URL!,process.env.SUPABASE_KEY!,{
+    realtime: {
+      transport: WebSocket as any,
+    },
+  }
 );
 
 app.get("/", (req, res) => {
