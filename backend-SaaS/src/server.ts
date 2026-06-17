@@ -4,6 +4,7 @@ import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
 import saleRoutes from "./routes/saleRoutes";
+import productRoutes from "./routes/productRoutes";
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ const supabase = createClient(process.env.SUPABASE_URL!,process.env.SUPABASE_KEY
     },
   }
 );
+
+app.use("/api/products", productRoutes);
 
 app.get("/", (req, res) => {
   return res.status(200).json({
