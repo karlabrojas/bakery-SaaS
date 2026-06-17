@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 
-import saleRoutes from "../routes/saleRoutes";
+import saleRoutes from "./routes/saleRoutes";
 
 dotenv.config();
 
@@ -17,14 +17,12 @@ const supabase = createClient(
   process.env.SUPABASE_KEY!,
 );
 
-// Ruta principal
 app.get("/", (req, res) => {
   return res.status(200).json({
     message: "Bakery SaaS API funcionando",
   });
 });
 
-// Landing Page
 app.post("/orders", async (req, res) => {
   try {
     const { name, email, problem } = req.body;
@@ -50,7 +48,6 @@ app.post("/orders", async (req, res) => {
   }
 });
 
-// Módulo de Ventas
 app.use("/api/sales", saleRoutes);
 
 const PORT = process.env.PORT || 4000;
