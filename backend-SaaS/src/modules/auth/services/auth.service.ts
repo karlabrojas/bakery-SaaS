@@ -4,7 +4,7 @@ import { supabase } from "../../../config/supabase";
 import { hashToken } from "../../../utils/hash";
 import { TokenService } from "./token.service";
 import { RegisterDto } from "../validations/register";
-import { LoginUserDto } from "../validations/token.servide";
+import { LoginUserDto } from "../validations/login";
 import { UserEntity } from "../entities/user.entity";
 import { SessionEntity } from "../entities/session.entity";
 import { JwtPayload } from "../../../types/jwt-payload";
