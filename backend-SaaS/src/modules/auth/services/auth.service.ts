@@ -4,11 +4,16 @@ import { supabase } from "../../../config/supabase";
 import { hashToken } from "../../../utils/hash";
 import { TokenService } from "./token.service";
 import { RegisterDto } from "../validations/register";
+import { LoginUserDto } from "../validations/token.servide";
+import { UserEntity } from "../entities/user.entity";
+import { SessionEntity } from "../entities/session.entity";
+import { JwtPayload } from "../../../types/jwt-payload";
 
 export class AuthService {
   private tokenService = new TokenService();
 
   /** Registro */
+
   async register(
     data: RegisterDto,
     metadata: {
@@ -30,11 +35,8 @@ export class AuthService {
       .from("bakeries")
       .insert({
         name: data.bakery.name,
-
         address: data.bakery.address,
-
         phone: data.bakery.phone,
-
         email: data.bakery.email,
       })
       .select()
@@ -52,17 +54,11 @@ export class AuthService {
       .from("users")
       .insert({
         bakery_id: bakery.id,
-
         first_name: data.user.first_name,
-
         last_name: data.user.last_name,
-
         email: data.user.email,
-
         password_hash: passwordHash,
-
         role: "ADMIN",
-
         is_active: true,
       })
       .select()
@@ -72,36 +68,27 @@ export class AuthService {
       throw new Error("No se pudo crear el usuario");
     }
 
-    const user = userResult.data;
+    const user = userResult.data as UserEntity;
 
     const sessionId = randomUUID();
 
-    const payload = {
+    const payload: JwtPayload = {
       userId: user.id,
       bakeryId: bakery.id,
       role: user.role,
       sessionId,
     };
 
-    const accessToken = this.tokenService.generateAccessToken(payload);
+    const { accessToken, refreshToken, refreshHash } =
+      this.generateTokens(payload);
 
-    const refreshToken = this.tokenService.generateRefreshToken(payload);
-
-    const refreshHash = hashToken(refreshToken);
-
-    await supabase.from("sessions").insert({
+    await this.createSession({
       id: sessionId,
-
       user_id: user.id,
-
       refresh_token_hash: refreshHash,
-
       is_revoked: false,
-
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-
       ip_address: metadata.ip,
-
       user_agent: metadata.userAgent,
     });
 
@@ -119,19 +106,23 @@ export class AuthService {
   }
 
   /** Inicio de sesión */
+
   async login(
-    email: string,
-    password: string,
+    data: LoginUserDto,
     metadata: {
       ip: string;
       userAgent: string;
     },
   ) {
-    const { data: user } = await supabase
+    const { email, password } = data;
+
+    const response = await supabase
       .from("users")
       .select("*")
       .eq("email", email)
       .single();
+
+    const user = response.data as UserEntity | null;
 
     if (!user) {
       throw new Error("Credenciales inválidas");
@@ -149,20 +140,17 @@ export class AuthService {
 
     const sessionId = randomUUID();
 
-    const payload = {
+    const payload: JwtPayload = {
       userId: user.id,
       bakeryId: user.bakery_id,
       role: user.role,
       sessionId,
     };
 
-    const accessToken = this.tokenService.generateAccessToken(payload);
+    const { accessToken, refreshToken, refreshHash } =
+      this.generateTokens(payload);
 
-    const refreshToken = this.tokenService.generateRefreshToken(payload);
-
-    const refreshHash = hashToken(refreshToken);
-
-    await supabase.from("sessions").insert({
+    await this.createSession({
       id: sessionId,
       user_id: user.id,
       refresh_token_hash: refreshHash,
@@ -179,14 +167,17 @@ export class AuthService {
   }
 
   /** Refresh token */
+
   async refresh(refreshToken: string) {
     const payload = this.tokenService.verifyRefreshToken(refreshToken);
 
-    const { data: session } = await supabase
+    const response = await supabase
       .from("sessions")
       .select("*")
       .eq("id", payload.sessionId)
       .single();
+
+    const session = response.data as SessionEntity | null;
 
     if (!session) {
       throw new Error("Session not found");
@@ -209,26 +200,27 @@ export class AuthService {
       throw new Error("Refresh Token Reuse Detected");
     }
 
-    const newAccessToken = this.tokenService.generateAccessToken(payload);
-
-    const newRefreshToken = this.tokenService.generateRefreshToken(payload);
-
-    const newHash = hashToken(newRefreshToken);
+    const {
+      accessToken,
+      refreshToken: newRefreshToken,
+      refreshHash,
+    } = this.generateTokens(payload);
 
     await supabase
       .from("sessions")
       .update({
-        refresh_token_hash: newHash,
+        refresh_token_hash: refreshHash,
       })
       .eq("id", payload.sessionId);
 
     return {
-      accessToken: newAccessToken,
+      accessToken,
       refreshToken: newRefreshToken,
     };
   }
 
-  /** Cerrar sesión */
+  /** Cierre de sesión */
+
   async logout(userId: string, sessionId: string) {
     await supabase
       .from("sessions")
@@ -237,5 +229,27 @@ export class AuthService {
       })
       .eq("id", sessionId)
       .eq("user_id", userId);
+  }
+
+  private generateTokens(payload: JwtPayload) {
+    const accessToken = this.tokenService.generateAccessToken(payload);
+
+    const refreshToken = this.tokenService.generateRefreshToken(payload);
+
+    const refreshHash = hashToken(refreshToken);
+
+    return {
+      accessToken,
+      refreshToken,
+      refreshHash,
+    };
+  }
+
+  private async createSession(session: SessionEntity) {
+    const { error } = await supabase.from("sessions").insert(session);
+
+    if (error) {
+      throw new Error("No se pudo crear la sesión");
+    }
   }
 }
