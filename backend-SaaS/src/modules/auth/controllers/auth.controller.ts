@@ -38,24 +38,35 @@ export class AuthController {
   }
   /** Inicio de sesión */
   async login(req: Request, res: Response) {
-    const result = await authService.login(req.body.email, req.body.password, {
-      ip: req.ip!,
-      userAgent: req.headers["user-agent"] || "",
-    });
+    try {
+      const result = await authService.login(
+        {
+          email: req.body.email,
+          password: req.body.password,
+        },
+        {
+          ip: req.ip || "",
+          userAgent: req.headers["user-agent"] || "",
+        },
+      );
 
-    res.cookie("refreshToken", result.refreshToken, {
-      httpOnly: true,
+      res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
-      secure: process.env.NODE_ENV === "production",
+      return res.status(200).json({
+        accessToken: result.accessToken,
+      });
+    } catch (error: any) {
+      console.error(error);
 
-      sameSite: "strict",
-
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return res.json({
-      accessToken: result.accessToken,
-    });
+      return res.status(401).json({
+        message: error.message,
+      });
+    }
   }
   /** Refresh token */
   async refresh(req: Request, res: Response) {
