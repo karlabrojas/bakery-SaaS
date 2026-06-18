@@ -5,6 +5,7 @@ import Button from "@/components/ui/Button";
 import SearchInput from "@/components/ui/SearchInput";
 import ProductCard from "./productCard";
 import { useProducts } from "../hooks/useProducts";
+import { useCartStore } from "../store/useCartStore";
 
 export default function NewSaleForm() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function NewSaleForm() {
     error,
   } = useProducts();
 
-  const aumentarCantidad = (idProducto: number) => {
+  const aumentarCantidad = (idProducto: string) => {
     setProductos((productosAnteriores) =>
       productosAnteriores.map((producto) =>
         producto.id === idProducto
@@ -29,7 +30,7 @@ export default function NewSaleForm() {
     );
   };
 
-  const disminuirCantidad = (idProducto: number) => {
+  const disminuirCantidad = (idProducto: string) => {
     setProductos((productosAnteriores) =>
       productosAnteriores.map((producto) =>
         producto.id === idProducto
@@ -42,7 +43,7 @@ export default function NewSaleForm() {
     );
   };
 
-  const cambiarCantidad = (idProducto: number, cantidad: number) => {
+  const cambiarCantidad = (idProducto: string, cantidad: number) => {
     setProductos((productosAnteriores) =>
       productosAnteriores.map((producto) =>
         producto.id === idProducto
@@ -55,25 +56,22 @@ export default function NewSaleForm() {
     );
   };
 
+  const addItem = useCartStore((state) => state.addItem);
+
+  const clearCart = useCartStore((state) => state.clearCart);
+
   const continuarVenta = () => {
-    const productosSeleccionados = productos
+    clearCart();
+
+    productos
       .filter((producto) => producto.quantity > 0)
-      .map((producto) => ({
-        id: producto.id,
-        name: producto.name,
-        price: producto.price,
-        quantity: producto.quantity,
-      }));
+      .forEach((producto) => {
+        addItem({
+          ...producto,
+        });
+      });
 
-    if (productosSeleccionados.length === 0) {
-      return;
-    }
-
-    const datos = encodeURIComponent(
-      JSON.stringify(productosSeleccionados),
-    );
-
-    router.push(`/sales/cart?items=${datos}`);
+    router.push("/sales/cart");
   };
 
   const hayProductosSeleccionados = productos.some(
@@ -89,16 +87,10 @@ export default function NewSaleForm() {
       <SearchInput />
 
       {cargando && (
-        <p className="mt-4 text-center text-gray-500">
-          Cargando productos...
-        </p>
+        <p className="mt-4 text-center text-gray-500">Cargando productos...</p>
       )}
 
-      {error && (
-        <p className="mt-4 text-center text-red-500">
-          {error}
-        </p>
-      )}
+      {error && <p className="mt-4 text-center text-red-500">{error}</p>}
 
       {!cargando && !error && (
         <div className="space-y-4 mt-4">
@@ -120,7 +112,11 @@ export default function NewSaleForm() {
       )}
 
       <div className="mt-6">
-        <Button className={`w-full ${!hayProductosSeleccionados ? "opacity-50 cursor-not-allowed": ""}`} onClick={continuarVenta} disabled={!hayProductosSeleccionados}>
+        <Button
+          className={`w-full ${!hayProductosSeleccionados ? "opacity-50 cursor-not-allowed" : ""}`}
+          onClick={continuarVenta}
+          disabled={!hayProductosSeleccionados}
+        >
           Continuar
         </Button>
       </div>

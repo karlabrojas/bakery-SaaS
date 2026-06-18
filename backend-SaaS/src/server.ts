@@ -1,62 +1,21 @@
-import express from "express";
 import dotenv from "dotenv";
-import cors from "cors";
-import { createClient } from "@supabase/supabase-js";
-import WebSocket from "ws";
-import saleRoutes from "./routes/saleRoutes";
-import productRoutes from "./routes/productRoutes";
 
 dotenv.config();
 
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-const supabase = createClient(process.env.SUPABASE_URL!,process.env.SUPABASE_KEY!,{
-    realtime: {
-      transport: WebSocket as any,
-    },
-  }
-);
-
-app.use("/api/products", productRoutes);
-
-app.get("/", (req, res) => {
-  return res.status(200).json({
-    message: "Bakery SaaS API funcionando",
-  });
-});
-
-app.post("/orders", async (req, res) => {
-  try {
-    const { name, email, problem } = req.body;
-
-    const { data, error } = await supabase
-      .from("landing_data")
-      .insert([{ name, email, problem }])
-      .select();
-
-    if (error) {
-      return res.status(500).json(error);
-    }
-
-    return res.status(201).json({
-      ok: true,
-      data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      ok: false,
-      error: "Error del servidor",
-    });
-  }
-});
-
-app.use("/api/sales", saleRoutes);
+import app from "./app";
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-});
+async function bootstrap() {
+  try {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error(error);
+
+    process.exit(1);
+  }
+}
+
+bootstrap();

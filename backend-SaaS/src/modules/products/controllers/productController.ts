@@ -6,10 +6,13 @@ export class ProductController {
     try {
       const products = await ProductService.getAll();
 
-      return res.status(200).json(products);
+      return res.status(200).json({
+        success: true,
+        data: products,
+      });
     } catch (error) {
       return res.status(500).json({
-        message: "Error al obtener productos",
+        success: false,
         error,
       });
     }

@@ -1,45 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
-
-interface ItemCarrito {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-}
+import { useCartStore } from "@/features/sales/store/useCartStore";
 
 export default function PaginaCarrito() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const productos: ItemCarrito[] = useMemo(() => {
-    const datos = searchParams.get("items");
-    if (!datos) return [];
-    try {
-      return JSON.parse(decodeURIComponent(datos));
-    } catch {
-      return [];
-    }
-  }, [searchParams]);
+  const items = useCartStore((state) => state.items);
 
-  const total = productos.reduce(
-    (suma, producto) => suma + producto.price * producto.quantity,
-    0,
-  );
+  const total = useCartStore((state) => state.total());
 
-  const irAPago = () => {
-    const itemsCodificados = encodeURIComponent(JSON.stringify(productos));
-    router.push(`/sales/payment?total=${total}&items=${itemsCodificados}`);
-  };
-
-  if (productos.length === 0) {
+  if (!items.length) {
     return (
-      <div className="p-6 text-center text-gray-500">
-        No hay productos seleccionados.
-      </div>
+      <div className="p-6 text-center">No hay productos seleccionados.</div>
     );
   }
 
@@ -50,32 +24,36 @@ export default function PaginaCarrito() {
       </h2>
 
       <div className="space-y-3">
-        {productos.map((producto) => (
+        {items.map((item) => (
           <div
-            key={producto.id}
-            className="flex justify-between items-center bg-white border rounded-lg p-3"
+            key={item.id}
+            className="flex justify-between border rounded-lg p-3"
           >
             <div>
-              <p className="font-semibold">{producto.name}</p>
-              <p className="text-sm text-gray-500">
-                {producto.quantity} x ${producto.price}
+              <p className="font-semibold">{item.name}</p>
+
+              <p>
+                {item.quantity} x ${item.price}
               </p>
             </div>
-            <p className="font-bold">${producto.price * producto.quantity}</p>
+
+            <p>${item.price * item.quantity}</p>
           </div>
         ))}
       </div>
 
-      <div className="flex justify-between items-center mt-6 text-lg font-bold">
+      <div className="flex justify-between mt-6 font-bold">
         <span>Total</span>
+
         <span>${total}</span>
       </div>
 
-      <div className="mt-6">
-        <Button className="w-full" onClick={irAPago}>
-          Continuar al pago
-        </Button>
-      </div>
+      <Button
+        className="w-full mt-4"
+        onClick={() => router.push("/sales/payment")}
+      >
+        Continuar al pago
+      </Button>
     </div>
   );
 }

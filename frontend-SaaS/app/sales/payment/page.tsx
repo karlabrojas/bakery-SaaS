@@ -1,95 +1,84 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Button from "@/components/ui/Button";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+
 import PaymentModal from "@/features/sales/components/PaymentModal";
+
 import { createSale } from "@/features/sales/services/api";
 
-interface ItemCarrito {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-}
+import { useCartStore } from "@/features/sales/store/useCartStore";
+
+import { generateFolio } from "@/features/sales/utils/generateFolio";
 
 export default function PaymentPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const [modalAbierto, setModalAbierto] = useState(false);
-  const [enviando, setEnviando] = useState(false);
+  const items = useCartStore((state) => state.items);
+
+  const total = useCartStore((state) => state.total());
+
+  const clearCart = useCartStore((state) => state.clearCart);
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
 
-  const total = Number(searchParams.get("total")) || 0;
-
-  const productos: ItemCarrito[] = useMemo(() => {
-    const datos = searchParams.get("items");
-    if (!datos) return [];
-    try {
-      return JSON.parse(decodeURIComponent(datos));
-    } catch {
-      return [];
-    }
-  }, [searchParams]);
-
-  const confirmarPago = async (datosPago: {
+  const confirmPayment = async (paymentData: {
     paymentMethod: "cash" | "card" | "transfer";
-    received?: number;
-    change?: number;
   }) => {
-    setEnviando(true);
-    setError(null);
-
     try {
-      for (const producto of productos) {
-        await createSale({
-          product: producto.name,
-          quantity: producto.quantity,
-          total: producto.price * producto.quantity,
-        });
-      }
+      setLoading(true);
 
-      console.log("Datos de pago:", datosPago);
+      await createSale({
+        bakeryId: "UUID_DE_TU_PANADERIA",
+
+        paymentMethod: paymentData.paymentMethod,
+
+        items: items.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+        })),
+      });
+
+      localStorage.setItem("saleFolio", generateFolio());
+
+      clearCart();
+
       router.push("/sales/success");
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setEnviando(false);
+      setLoading(false);
     }
   };
 
   return (
     <>
-      <div>
-        <h1 className="mb-4 bg-[#472D20] p-4 text-2xl font-bold text-white">
-          Pago
-        </h1>
+      <Card>
+        <p>Total:</p>
 
-        <Card>
-          <div className="space-y-2">
-            <p className="text-lg">Total a pagar</p>
-            <p className="text-4xl font-bold">${total}</p>
-          </div>
-        </Card>
+        <p className="text-4xl font-bold">${total}</p>
+      </Card>
 
-        {error && <p className="mt-3 text-center text-red-500">{error}</p>}
+      {error && <p className="text-red-500">{error}</p>}
 
-        <div className="mt-6">
-          <Button
-            className="w-full"
-            onClick={() => setModalAbierto(true)}
-            disabled={enviando}
-          >
-            {enviando ? "Registrando venta..." : "Seleccionar Método de Pago"}
-          </Button>
-        </div>
-      </div>
+      <Button
+        className="w-full mt-4"
+        onClick={() => setModalOpen(true)}
+        disabled={loading}
+      >
+        Seleccionar Método
+      </Button>
 
-      <Modal isOpen={modalAbierto} onClose={() => setModalAbierto(false)}>
-        <PaymentModal total={total} onConfirm={confirmarPago} />
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+        <PaymentModal total={total} onConfirm={confirmPayment} />
       </Modal>
     </>
   );

@@ -54,14 +54,9 @@ export default function ProductCard({
 
         <Input
           type="number"
-          min={1}
+          min={0}
           value={quantity}
           onChange={(e) => onQuantityChange(Number(e.target.value))}
-          className="
-            w-16
-            text-center
-            font-bold
-          "
         />
 
         <button
