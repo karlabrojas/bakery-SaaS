@@ -50,7 +50,7 @@ export class SaleService {
       return {
         product_id: product.id,
         quantity: item.quantity,
-        unit_price: product.price,
+        price: product.price,
         subtotal,
       };
     });
@@ -59,7 +59,7 @@ export class SaleService {
       .from("sales")
       .insert([
         {
-          bakery_id: data.bakeryId,
+          bakery_id: data.bakeryId ?? null,
 
           customer_id: data.customerId ?? null,
 
@@ -79,6 +79,9 @@ export class SaleService {
       ...item,
       sale_id: sale.id,
     }));
+
+    console.log("ITEMS A INSERTAR");
+    console.log(JSON.stringify(itemsToInsert, null, 2));
 
     const { data: insertedItems, error: itemsError } = await supabase
       .from("sale_items")
@@ -124,7 +127,7 @@ export class SaleService {
         sale_id: saleId,
         product_id: product.id,
         quantity: item.quantity,
-        unit_price: product.price,
+        price: product.price,
         subtotal,
       };
     });

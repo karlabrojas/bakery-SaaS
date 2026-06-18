@@ -6,9 +6,7 @@ import { Product } from "../types/product.type";
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -16,7 +14,7 @@ export function useProducts() {
       .then((data) =>
         setProducts(
           data.map((p: any) => ({
-            id: p.uid,
+            id: p.id,
             name: p.name,
             description: p.description ?? "",
             price: Number(p.price),

@@ -4,11 +4,11 @@ export interface SaleItemDTO {
 }
 
 export interface CreateSaleDTO {
-  bakeryId: string;
+  bakeryId?: string | null;
 
   customerId?: string;
 
-  paymentMethod: "cash" | "card" | "transfer";
+  paymentMethod: "Efectivo" | "Tarjeta" | "Transferencia";
 
   items: SaleItemDTO[];
 }

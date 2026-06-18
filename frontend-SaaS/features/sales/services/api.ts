@@ -13,9 +13,7 @@ export async function fetchProducts() {
 }
 
 interface CreateSalePayload {
-  bakeryId: string;
-
-  paymentMethod: "cash" | "card" | "transfer";
+  paymentMethod: "Efectivo" | "Tarjeta" | "Transferencia";
 
   items: {
     productId: string;

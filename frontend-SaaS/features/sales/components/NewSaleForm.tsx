@@ -77,6 +77,7 @@ export default function NewSaleForm() {
   const hayProductosSeleccionados = productos.some(
     (producto) => producto.quantity > 0,
   );
+  console.log(productos);
 
   return (
     <div>
@@ -94,9 +95,9 @@ export default function NewSaleForm() {
 
       {!cargando && !error && (
         <div className="space-y-4 mt-4">
-          {productos.map((producto) => (
+          {productos.map((producto, index) => (
             <ProductCard
-              key={producto.id}
+              key={producto.id || index}
               title={producto.name}
               description={producto.description}
               price={producto.price}

@@ -9,14 +9,16 @@ interface PaymentModalProps {
   total: number;
 
   onConfirm: (data: {
-    paymentMethod: "cash" | "card" | "transfer";
+    paymentMethod: "Efectivo" | "Tarjeta" | "Transferencia";
     received?: number;
     change?: number;
   }) => Promise<void>;
 }
 
 export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
-  const [method, setMethod] = useState<"cash" | "card" | "transfer">("cash");
+  const [method, setMethod] = useState<
+    "Efectivo" | "Tarjeta" | "Transferencia"
+  >("Efectivo");
   const [received, setReceived] = useState("");
   const [cargando, setCargando] = useState(false);
 
@@ -26,9 +28,9 @@ export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
     setCargando(true);
 
     try {
-      if (method === "cash") {
+      if (method === "Efectivo") {
         await onConfirm({
-          paymentMethod: "cash",
+          paymentMethod: "Efectivo",
           received: Number(received),
           change: Math.max(0, change),
         });
@@ -55,7 +57,7 @@ export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
         </div>
       </div>
 
-      {method === "cash" && (
+      {method === "Efectivo" && (
         <>
           <div>
             <label className="mb-2 block">Dinero recibido</label>

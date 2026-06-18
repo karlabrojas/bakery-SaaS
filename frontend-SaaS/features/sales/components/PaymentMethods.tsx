@@ -1,25 +1,25 @@
 import { Banknote, CreditCard, ArrowLeftRight } from "lucide-react";
 
 interface Props {
-  selectedMethod: "cash" | "card" | "transfer";
+  selectedMethod: "Efectivo" | "Tarjeta" | "Transferencia";
 
-  onSelect: (method: "cash" | "card" | "transfer") => void;
+  onSelect: (method: "Efectivo" | "Tarjeta" | "Transferencia") => void;
 }
 
 export default function PaymentMethods({ selectedMethod, onSelect }: Props) {
   const methods = [
     {
-      value: "cash",
+      value: "Efectivo",
       label: "Efectivo",
       icon: Banknote,
     },
     {
-      value: "card",
+      value: "Tarjeta",
       label: "Tarjeta",
       icon: CreditCard,
     },
     {
-      value: "transfer",
+      value: "Transferencia",
       label: "Transferencia",
       icon: ArrowLeftRight,
     },
@@ -34,7 +34,7 @@ export default function PaymentMethods({ selectedMethod, onSelect }: Props) {
           <button
             key={method.value}
             onClick={() =>
-              onSelect(method.value as "cash" | "card" | "transfer")
+              onSelect(method.value as "Efectivo" | "Tarjeta" | "Transferencia")
             }
             className={`
               flex
