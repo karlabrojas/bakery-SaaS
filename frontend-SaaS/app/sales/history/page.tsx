@@ -1,3 +1,5 @@
+"use client";
+
 import SalesHistoryTable from "@/features/sales/components/SalesHistoryTable";
 
 export default function HistoryPage() {

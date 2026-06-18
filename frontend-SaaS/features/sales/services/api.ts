@@ -52,3 +52,25 @@ export async function getSales() {
 
   return json.data;
 }
+
+export const updateSale = async (id: string, data: any) => {
+  const res = await fetch(`${api}/api/sales/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) throw new Error("Error updating sale");
+  return res.json();
+};
+
+export const deleteSale = async (id: string) => {
+  const res = await fetch(`${api}/api/sales/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) throw new Error("Error deleting sale");
+  return res.json();
+};

@@ -11,7 +11,7 @@ export default function SaleSuccess() {
     typeof window !== "undefined" ? localStorage.getItem("saleFolio") : null;
 
   return (
-    <div className="text-center">
+    <div className="text-center h-screen">
       <CircleCheck size={200} className="mx-auto text-green-600" />
 
       <h1 className="text-5xl text-green-600 mt-4">Venta Completada</h1>
@@ -20,9 +20,17 @@ export default function SaleSuccess() {
 
       {folio && <p className="mt-4 font-bold">Folio: {folio}</p>}
 
-      <Button className="mt-6" onClick={() => router.push("/sales/new-sales")}>
-        Nueva Venta
-      </Button>
+      <div className="flex flex-col">
+        <Button
+          className="mt-6"
+          onClick={() => router.push("/sales/new-sales")}
+        >
+          Nueva Venta
+        </Button>
+        <Button className="mt-6" onClick={() => router.push("/sales")}>
+          Inicio
+        </Button>
+      </div>
     </div>
   );
 }
