@@ -4,24 +4,40 @@ import { SaleService } from "../services/saleService";
 export class SaleController {
   static async getAll(req: Request, res: Response) {
     try {
-      const sales = await SaleService.getAll();
+      if (!req.user) {
+        return res
+          .status(401)
+          .json({ success: false, message: "No autorizado" });
+      }
+
+      const sales = await SaleService.getAllByBakery(req.user.bakeryId);
 
       return res.status(200).json({
         success: true,
         data: sales,
       });
-    } catch (error) {
+    } catch (error: any) {
       return res.status(500).json({
         success: false,
-        error,
+        error: error.message,
       });
     }
   }
 
   static async create(req: Request, res: Response) {
     try {
-      const sale = await SaleService.create(req.body);
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "No autorizado",
+        });
+      }
 
+      const sale = await SaleService.create({
+        ...req.body,
+        bakeryId: req.user.bakeryId,
+      });
+      console.log("BakeryId desde JWT:", req.user.bakeryId);
       return res.status(201).json({
         success: true,
         data: sale,

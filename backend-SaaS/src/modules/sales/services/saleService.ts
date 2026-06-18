@@ -2,6 +2,38 @@ import { supabase } from "../../../config/supabase";
 import { CreateSaleDTO } from "../entities/saleItem";
 
 export class SaleService {
+  static async getAllByBakery(bakeryId: string) {
+    const { data, error } = await supabase
+      .from("sales")
+      .select(
+        `
+        *,
+        sale_items (*)
+      `,
+      )
+      .eq("bakery_id", bakeryId) // filtro por panadería
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data as CreateSaleDTO[];
+  }
+
+  static async getAllByUser(userId: string) {
+    const { data, error } = await supabase
+      .from("sales")
+      .select(
+        `
+        *,
+        sale_items (*)
+      `,
+      )
+      .eq("customer_id", userId) // filtro por cliente/usuario
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data as CreateSaleDTO[];
+  }
+
   static async getAll() {
     const { data, error } = await supabase
       .from("sales")

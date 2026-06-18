@@ -4,7 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export class AuthService {
   async login(data: LoginDto) {
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
 
       headers: {
@@ -26,7 +26,7 @@ export class AuthService {
   }
 
   async register(data: RegisterDto) {
-    const response = await fetch(`${API_URL}/auth/register`, {
+    const response = await fetch(`${API_URL}/api/auth/register`, {
       method: "POST",
 
       headers: {

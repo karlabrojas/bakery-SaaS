@@ -2,10 +2,19 @@
 
 import Button from "@/components/ui/Button";
 import HistoryPage from "./history/page";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SalesPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      router.push("/auth");
+    }
+  }, [router]);
+
   return (
     <main className="p-6 ">
       <section className="flex flex-row ">
