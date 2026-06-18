@@ -1,16 +1,23 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import saleRoutes from "./modules/sales/routes/saleRoutes";
 import productRoutes from "./modules/products/routes/productRoutes";
+import authRoutes from "./modules/auth/routes/auth.routes";
 
 import { supabase } from "./config/supabase";
 
 const app = express();
 
-app.use(cors());
-
 app.use(express.json());
+app.use(
+  cors({
+    origin: process.env.URL_FRONTEND,
+    credentials: true,
+  }),
+);
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   return res.status(200).json({
@@ -24,13 +31,7 @@ app.post("/orders", async (req, res) => {
 
     const { data, error } = await supabase
       .from("landing_data")
-      .insert([
-        {
-          name,
-          email,
-          problem,
-        },
-      ])
+      .insert([{ name, email, problem }])
       .select();
 
     if (error) {
@@ -52,26 +53,9 @@ app.post("/orders", async (req, res) => {
   }
 });
 
+// Rutas de módulos
 app.use("/api/products", productRoutes);
-
 app.use("/api/sales", saleRoutes);
-import cookieParser from "cookie-parser";
-
-import authRoutes from "./modules/auth/routes/auth.routes";
-
-const app = express();
-
-app.use(express.json());
-
-app.use(
-  cors({
-    origin: process.env.URL_FRONTEND,
-    credentials: true,
-  }),
-);
-
-app.use(cookieParser());
-
 app.use("/api/auth", authRoutes);
 
 export default app;
