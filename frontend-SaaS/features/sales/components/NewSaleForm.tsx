@@ -8,81 +8,111 @@ import { useProducts } from "../hooks/useProducts";
 
 export default function NewSaleForm() {
   const router = useRouter();
-  const { products, setProducts, loading, error } = useProducts();
 
-  const increaseQuantity = (productId: number) => {
-    setProducts((prev) =>
-      prev.map((product) =>
-        product.id === productId
+  const {
+    products: productos,
+    setProducts: setProductos,
+    loading: cargando,
+    error,
+  } = useProducts();
+
+  const aumentarCantidad = (idProducto: number) => {
+    setProductos((productosAnteriores) =>
+      productosAnteriores.map((producto) =>
+        producto.id === idProducto
           ? {
-              ...product,
-              quantity: product.quantity + 1,
+              ...producto,
+              quantity: producto.quantity + 1,
             }
-          : product,
+          : producto,
       ),
     );
   };
 
-  const decreaseQuantity = (productId: number) => {
-    setProducts((prev) =>
-      prev.map((product) =>
-        product.id === productId
+  const disminuirCantidad = (idProducto: number) => {
+    setProductos((productosAnteriores) =>
+      productosAnteriores.map((producto) =>
+        producto.id === idProducto
           ? {
-              ...product,
-              quantity: Math.max(1, product.quantity - 1),
+              ...producto,
+              quantity: Math.max(0, producto.quantity - 1),
             }
-          : product,
+          : producto,
       ),
     );
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
-    setProducts((prev) =>
-      prev.map((product) =>
-        product.id === productId
+  const cambiarCantidad = (idProducto: number, cantidad: number) => {
+    setProductos((productosAnteriores) =>
+      productosAnteriores.map((producto) =>
+        producto.id === idProducto
           ? {
-              ...product,
-              quantity: quantity > 0 ? quantity : 1,
+              ...producto,
+              quantity: cantidad > 0 ? cantidad : 0,
             }
-          : product,
+          : producto,
       ),
     );
   };
+
+  const continuarVenta = () => {
+    const productosSeleccionados = productos
+      .filter((producto) => producto.quantity > 0)
+      .map((producto) => ({
+        id: producto.id,
+        name: producto.name,
+        price: producto.price,
+        quantity: producto.quantity,
+      }));
+
+    if (productosSeleccionados.length === 0) {
+      return;
+    }
+
+    const datos = encodeURIComponent(
+      JSON.stringify(productosSeleccionados),
+    );
+
+    router.push(`/sales/cart?items=${datos}`);
+  };
+
+  const hayProductosSeleccionados = productos.some(
+    (producto) => producto.quantity > 0,
+  );
 
   return (
     <div>
-      <h2
-        className="
-          text-2xl
-          font-bold
-          mb-4
-          bg-[#472D20]
-          text-white
-          p-4
-        "
-      >
+      <h2 className="text-2xl font-bold mb-4 bg-[#472D20] text-white p-4">
         Nueva Venta
       </h2>
 
       <SearchInput />
 
-      {loading && <p className="mt-4 text-center text-gray-500">Cargando productos...</p>}
+      {cargando && (
+        <p className="mt-4 text-center text-gray-500">
+          Cargando productos...
+        </p>
+      )}
 
-      {error && <p className="mt-4 text-center text-red-500">{error}</p>}
+      {error && (
+        <p className="mt-4 text-center text-red-500">
+          {error}
+        </p>
+      )}
 
-      {!loading && !error && (
+      {!cargando && !error && (
         <div className="space-y-4 mt-4">
-          {products.map((product) => (
+          {productos.map((producto) => (
             <ProductCard
-              key={product.id}
-              title={product.name}
-              description={product.description}
-              price={product.price}
-              quantity={product.quantity}
-              onIncrease={() => increaseQuantity(product.id)}
-              onDecrease={() => decreaseQuantity(product.id)}
-              onQuantityChange={(quantity) =>
-                updateQuantity(product.id, quantity)
+              key={producto.id}
+              title={producto.name}
+              description={producto.description}
+              price={producto.price}
+              quantity={producto.quantity}
+              onIncrease={() => aumentarCantidad(producto.id)}
+              onDecrease={() => disminuirCantidad(producto.id)}
+              onQuantityChange={(cantidad) =>
+                cambiarCantidad(producto.id, cantidad)
               }
             />
           ))}
@@ -90,7 +120,7 @@ export default function NewSaleForm() {
       )}
 
       <div className="mt-6">
-        <Button className="w-full" onClick={() => router.push("/sales/cart")}>
+        <Button className={`w-full ${!hayProductosSeleccionados ? "opacity-50 cursor-not-allowed": ""}`} onClick={continuarVenta} disabled={!hayProductosSeleccionados}>
           Continuar
         </Button>
       </div>

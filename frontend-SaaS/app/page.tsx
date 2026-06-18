@@ -7,7 +7,7 @@ export default function Home() {
     <main className="bg-[#F5E6D3] min-h-screen">
       <LandingPage />
       <SeccionInfo />
-      <SalesPage />
+      {/* <SalesPage /> */}
     </main>
   );
 }

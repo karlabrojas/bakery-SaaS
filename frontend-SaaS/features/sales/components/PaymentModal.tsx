@@ -10,34 +10,36 @@ interface PaymentModalProps {
 
   onConfirm: (data: {
     paymentMethod: "cash" | "card" | "transfer";
-
     received?: number;
-
     change?: number;
-  }) => void;
+  }) => Promise<void>;
 }
 
 export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
   const [method, setMethod] = useState<"cash" | "card" | "transfer">("cash");
-
   const [received, setReceived] = useState("");
+  const [cargando, setCargando] = useState(false);
 
   const change = Number(received || 0) - total;
 
-  const handleConfirm = () => {
-    if (method === "cash") {
-      onConfirm({
-        paymentMethod: "cash",
-        received: Number(received),
-        change: Math.max(0, change),
-      });
+  const handleConfirm = async () => {
+    setCargando(true);
 
-      return;
+    try {
+      if (method === "cash") {
+        await onConfirm({
+          paymentMethod: "cash",
+          received: Number(received),
+          change: Math.max(0, change),
+        });
+      } else {
+        await onConfirm({
+          paymentMethod: method,
+        });
+      }
+    } finally {
+      setCargando(false);
     }
-
-    onConfirm({
-      paymentMethod: method,
-    });
   };
 
   return (
@@ -46,17 +48,9 @@ export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
 
       <PaymentMethods selectedMethod={method} onSelect={setMethod} />
 
-      <div
-        className="
-          rounded-xl
-          border-2
-          border-[#B8926B]
-          p-4
-        "
-      >
+      <div className="rounded-xl border-2 border-[#B8926B] p-4">
         <div className="flex justify-between">
           <span>Total</span>
-
           <span className="font-bold">${total}</span>
         </div>
       </div>
@@ -65,7 +59,6 @@ export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
         <>
           <div>
             <label className="mb-2 block">Dinero recibido</label>
-
             <Input
               type="number"
               value={received}
@@ -75,25 +68,17 @@ export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
             />
           </div>
 
-          <div
-            className="
-              rounded-xl
-              border-2
-              border-[#B8926B]
-              p-4
-            "
-          >
+          <div className="rounded-xl border-2 border-[#B8926B] p-4">
             <div className="flex justify-between">
               <span>Cambio</span>
-
               <span className="font-bold">${Math.max(0, change)}</span>
             </div>
           </div>
         </>
       )}
 
-      <Button className="w-full" onClick={handleConfirm}>
-        Confirmar Venta
+      <Button className="w-full" onClick={handleConfirm} disabled={cargando}>
+        {cargando ? "Cargando..." : "Confirmar Venta"}
       </Button>
     </div>
   );
