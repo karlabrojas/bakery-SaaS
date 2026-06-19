@@ -11,7 +11,7 @@ export default function SaleSuccess() {
     typeof window !== "undefined" ? localStorage.getItem("saleFolio") : null;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] py-12 px-4 text-center max-w-md mx-auto">
+    <div className="flex flex-col items-center pt-10 pb-12 px-4 text-center max-w-md mx-auto">
       <div className="bg-green-50 p-6 rounded-full shadow-inner animate-pulse mb-4">
         <CircleCheck size={100} className="text-green-600" />
       </div>

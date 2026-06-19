@@ -27,7 +27,7 @@ export default function ConfirmDeleteModal({
           <Button
             variant="secondary"
             onClick={onCancel}
-            className="w-full h-11 text-sm font-medium border border-stone-300"
+            className="w-full h-11 text-center text-sm font-medium border border-stone-300"
           >
             Cancelar
           </Button>
@@ -35,10 +35,10 @@ export default function ConfirmDeleteModal({
           <Button
             variant="danger"
             onClick={onConfirm}
-            className="w-full h-11 text-sm font-semibold shadow-sm bg-red-600 hover:bg-red-700 text-white"
+            className="w-full h-11 text-sm text-center font-semibold shadow-sm bg-red-600 hover:bg-red-700 text-white"
             disabled={loading}
           >
-            {loading ? "Eliminando..." : "Sí, eliminar"}
+            {loading ? "Eliminando..." : "Eliminar"}
           </Button>
         </div>
       </div>
