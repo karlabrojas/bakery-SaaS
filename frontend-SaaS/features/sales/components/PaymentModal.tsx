@@ -1,87 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import PaymentMethods from "./PaymentMethods";
+import { Banknote, CreditCard, ArrowLeftRight } from "lucide-react";
 
-interface PaymentModalProps {
-  total: number;
-
-  onConfirm: (data: {
-    paymentMethod: "Efectivo" | "Tarjeta" | "Transferencia";
-    received?: number;
-    change?: number;
-  }) => Promise<void>;
+interface Props {
+  selectedMethod: "Efectivo" | "Tarjeta" | "Transferencia";
+  onSelect: (method: "Efectivo" | "Tarjeta" | "Transferencia") => void;
 }
 
-export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
-  const [method, setMethod] = useState<
-    "Efectivo" | "Tarjeta" | "Transferencia"
-  >("Efectivo");
-  const [received, setReceived] = useState("");
-  const [cargando, setCargando] = useState(false);
-
-  const change = Number(received || 0) - total;
-
-  const handleConfirm = async () => {
-    setCargando(true);
-
-    try {
-      if (method === "Efectivo") {
-        await onConfirm({
-          paymentMethod: "Efectivo",
-          received: Number(received),
-          change: Math.max(0, change),
-        });
-      } else {
-        await onConfirm({
-          paymentMethod: method,
-        });
-      }
-    } finally {
-      setCargando(false);
-    }
-  };
+export default function PaymentMethods({ selectedMethod, onSelect }: Props) {
+  const methods = [
+    { value: "Efectivo", label: "Efectivo", icon: Banknote },
+    { value: "Tarjeta", label: "Tarjeta", icon: CreditCard },
+    { value: "Transferencia", label: "Transferencia", icon: ArrowLeftRight },
+  ];
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Método de Pago</h2>
+    <div className="flex gap-3 w-full">
+      {methods.map((method) => {
+        const Icon = method.icon;
+        const isSelected = selectedMethod === method.value;
 
-      <PaymentMethods selectedMethod={method} onSelect={setMethod} />
-
-      <div className="rounded-xl border-2 border-[#B8926B] p-4">
-        <div className="flex justify-between">
-          <span>Total</span>
-          <span className="font-bold">${total}</span>
-        </div>
-      </div>
-
-      {method === "Efectivo" && (
-        <>
-          <div>
-            <label className="mb-2 block">Dinero recibido</label>
-            <Input
-              type="number"
-              value={received}
-              onChange={(e) => setReceived(e.target.value)}
-              placeholder="0.00"
-              className="w-full"
+        return (
+          <button
+            key={method.value}
+            type="button"
+            onClick={() =>
+              onSelect(method.value as "Efectivo" | "Tarjeta" | "Transferencia")
+            }
+            className={`
+              flex flex-col items-center justify-center gap-2 flex-1 
+              rounded-xl p-4 border-2 transition-all duration-200 cursor-pointer
+              active:scale-[0.97] select-none
+              ${
+                isSelected
+                  ? "border-[#6B3118] bg-[#EAD9B6] text-[#6B3118] shadow-md font-bold"
+                  : "border-[#B8926B]/40 bg-[#FBEACE] text-[#5A2E1F] hover:border-[#B8926B]"
+              }
+            `}
+          >
+            <Icon
+              size={26}
+              className={
+                isSelected ? "scale-110 transition-transform" : "opacity-80"
+              }
             />
-          </div>
-
-          <div className="rounded-xl border-2 border-[#B8926B] p-4">
-            <div className="flex justify-between">
-              <span>Cambio</span>
-              <span className="font-bold">${Math.max(0, change)}</span>
-            </div>
-          </div>
-        </>
-      )}
-
-      <Button className="w-full" onClick={handleConfirm} disabled={cargando}>
-        {cargando ? "Cargando..." : "Confirmar Venta"}
-      </Button>
+            <span className="text-sm font-medium tracking-wide">
+              {method.label}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }

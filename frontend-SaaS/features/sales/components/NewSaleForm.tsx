@@ -11,7 +11,7 @@ export default function NewSaleForm() {
   const router = useRouter();
 
   const {
-    products: productos,
+    products: productos = [],
     setProducts: setProductos,
     loading: cargando,
     error,
@@ -19,12 +19,9 @@ export default function NewSaleForm() {
 
   const aumentarCantidad = (idProducto: string) => {
     setProductos((productosAnteriores) =>
-      productosAnteriores.map((producto) =>
+      (productosAnteriores ?? []).map((producto) =>
         producto.id === idProducto
-          ? {
-              ...producto,
-              quantity: producto.quantity + 1,
-            }
+          ? { ...producto, quantity: (producto.quantity ?? 0) + 1 }
           : producto,
       ),
     );
@@ -32,12 +29,9 @@ export default function NewSaleForm() {
 
   const disminuirCantidad = (idProducto: string) => {
     setProductos((productosAnteriores) =>
-      productosAnteriores.map((producto) =>
+      (productosAnteriores ?? []).map((producto) =>
         producto.id === idProducto
-          ? {
-              ...producto,
-              quantity: Math.max(0, producto.quantity - 1),
-            }
+          ? { ...producto, quantity: Math.max(0, (producto.quantity ?? 0) - 1) }
           : producto,
       ),
     );
@@ -45,81 +39,99 @@ export default function NewSaleForm() {
 
   const cambiarCantidad = (idProducto: string, cantidad: number) => {
     setProductos((productosAnteriores) =>
-      productosAnteriores.map((producto) =>
+      (productosAnteriores ?? []).map((producto) =>
         producto.id === idProducto
-          ? {
-              ...producto,
-              quantity: cantidad > 0 ? cantidad : 0,
-            }
+          ? { ...producto, quantity: cantidad > 0 ? cantidad : 0 }
           : producto,
       ),
     );
   };
 
   const addItem = useCartStore((state) => state.addItem);
-
   const clearCart = useCartStore((state) => state.clearCart);
 
   const continuarVenta = () => {
     clearCart();
-
-    productos
-      .filter((producto) => producto.quantity > 0)
+    (productos ?? [])
+      .filter((producto) => (producto.quantity ?? 0) > 0)
       .forEach((producto) => {
-        addItem({
-          ...producto,
-        });
+        addItem({ ...producto });
       });
-
     router.push("/sales/cart");
   };
 
-  const hayProductosSeleccionados = productos.some(
-    (producto) => producto.quantity > 0,
-  );
-  console.log(productos);
+  const hayProductosSeleccionados =
+    productos?.some((p) => (p.quantity ?? 0) > 0) ?? false;
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4 bg-[#472D20] text-white p-4">
-        Nueva Venta
-      </h2>
-
-      <SearchInput />
-
-      {cargando && (
-        <p className="mt-4 text-center text-gray-500">Cargando productos...</p>
-      )}
-
-      {error && <p className="mt-4 text-center text-red-500">{error}</p>}
-
-      {!cargando && !error && (
-        <div className="space-y-4 mt-4">
-          {productos.map((producto, index) => (
-            <ProductCard
-              key={producto.id || index}
-              title={producto.name}
-              description={producto.description}
-              price={producto.price}
-              quantity={producto.quantity}
-              onIncrease={() => aumentarCantidad(producto.id)}
-              onDecrease={() => disminuirCantidad(producto.id)}
-              onQuantityChange={(cantidad) =>
-                cambiarCantidad(producto.id, cantidad)
-              }
-            />
-          ))}
+    <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+      <div className="bg-[#472D20] px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-xl font-bold text-white tracking-wide">
+          Nueva Venta
+        </h2>
+        <div className="w-full sm:w-72">
+          <SearchInput />
         </div>
-      )}
+      </div>
 
-      <div className="mt-6">
-        <Button
-          className={`w-full ${!hayProductosSeleccionados ? "opacity-50 cursor-not-allowed" : ""}`}
-          onClick={continuarVenta}
-          disabled={!hayProductosSeleccionados}
-        >
-          Continuar
-        </Button>
+      <div className="p-6 space-y-6">
+        {cargando && (
+          <div className="py-12 flex flex-col items-center justify-center space-y-2">
+            <div className="w-8 h-8 border-4 border-[#472D20] border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm font-medium text-stone-500">
+              Cargando catálogo de productos...
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl text-center font-medium">
+            {error}
+          </div>
+        )}
+
+        {!cargando && !error && (
+          <div className="divide-y divide-stone-100 max-h-[50vh] overflow-y-auto pr-2 space-y-2">
+            {(productos?.length ?? 0) === 0 ? (
+              <p className="text-center py-12 text-stone-400 text-sm">
+                No se encontraron productos disponibles.
+              </p>
+            ) : (
+              productos.map((producto, index) => (
+                <div
+                  key={producto.id || `prod-${index}`}
+                  className="pt-2 first:pt-0"
+                >
+                  <ProductCard
+                    title={producto.name}
+                    description={producto.description}
+                    price={producto.price}
+                    quantity={producto.quantity ?? 0} // Asegura un valor numérico plano
+                    onIncrease={() => aumentarCantidad(producto.id)}
+                    onDecrease={() => disminuirCantidad(producto.id)}
+                    onQuantityChange={(cantidad) =>
+                      cambiarCantidad(producto.id, cantidad)
+                    }
+                  />
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        <div className="pt-4 border-t border-stone-100 flex justify-end">
+          <Button
+            className={`w-full sm:w-48 h-12 text-base font-bold shadow-md transition-all ${
+              !hayProductosSeleccionados
+                ? "opacity-40 cursor-not-allowed"
+                : "active:scale-[0.98]"
+            }`}
+            onClick={continuarVenta}
+            disabled={!hayProductosSeleccionados}
+          >
+            Continuar Venta
+          </Button>
+        </div>
       </div>
     </div>
   );

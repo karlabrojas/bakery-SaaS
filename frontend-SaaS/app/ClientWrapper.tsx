@@ -9,7 +9,8 @@ export default function ClientWrapper({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideSidebar = pathname.startsWith("/auth");
+
+  const hideSidebar = pathname === "/" || pathname.startsWith("/auth");
 
   return hideSidebar ? (
     <main>{children}</main>
