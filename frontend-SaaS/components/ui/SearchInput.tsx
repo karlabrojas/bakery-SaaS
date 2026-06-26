@@ -1,11 +1,18 @@
 import { Search } from "lucide-react";
 
-export default function SearchInput() {
+interface SearchInputProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+export default function SearchInput({ value, onChange }: SearchInputProps) {
   return (
     <div className="relative">
       <Search size={18} className="absolute left-3 top-3" />
 
       <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         placeholder="Buscar..."
         className="
           w-full

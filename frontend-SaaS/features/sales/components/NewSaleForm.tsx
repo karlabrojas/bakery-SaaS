@@ -6,6 +6,8 @@ import SearchInput from "@/components/ui/SearchInput";
 import ProductCard from "./productCard";
 import { useProducts } from "../hooks/useProducts";
 import { useCartStore } from "../store/useCartStore";
+import { useState } from "react";
+
 
 export default function NewSaleForm() {
   const router = useRouter();
@@ -16,6 +18,8 @@ export default function NewSaleForm() {
     loading: cargando,
     error,
   } = useProducts();
+
+  const [busqueda, setBusqueda] = useState("");
 
   const aumentarCantidad = (idProducto: string) => {
     setProductos((productosAnteriores) =>
@@ -63,6 +67,11 @@ export default function NewSaleForm() {
   const hayProductosSeleccionados =
     productos?.some((p) => (p.quantity ?? 0) > 0) ?? false;
 
+  const productosFiltrados = (productos ?? []).filter((p) =>
+    p.name.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+
   return (
     <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
       <div className="bg-[#472D20] px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -70,7 +79,7 @@ export default function NewSaleForm() {
           Nueva Venta
         </h2>
         <div className="w-full sm:w-72">
-          <SearchInput />
+          <SearchInput value={busqueda} onChange={setBusqueda}/>
         </div>
       </div>
 
@@ -92,12 +101,12 @@ export default function NewSaleForm() {
 
         {!cargando && !error && (
           <div className="divide-y divide-stone-100 max-h-[50vh] overflow-y-auto pr-2 space-y-2">
-            {(productos?.length ?? 0) === 0 ? (
+            {(productosFiltrados.length ?? 0) === 0 ? (
               <p className="text-center py-12 text-stone-400 text-sm">
                 No se encontraron productos disponibles.
               </p>
             ) : (
-              productos.map((producto, index) => (
+              productosFiltrados.map((producto, index) => (
                 <div
                   key={producto.id || `prod-${index}`}
                   className="pt-2 first:pt-0"
