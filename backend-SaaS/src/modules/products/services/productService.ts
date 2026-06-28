@@ -12,6 +12,23 @@ export class ProductService {
       throw error;
     }
 
-    return data;
+    const products = data.map((product) => {
+      let imageUrl = null;
+
+      if (product.imagen_path) {
+        const { data } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(product.imagen_path);
+
+        imageUrl = data.publicUrl;
+      }
+
+      return {
+        ...product,
+        imageUrl,
+      };
+    });
+
+    return products;
   }
 }

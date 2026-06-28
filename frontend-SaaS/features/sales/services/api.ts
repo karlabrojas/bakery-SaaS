@@ -1,6 +1,8 @@
+import { Product } from "../types/product.type";
+
 const api = process.env.NEXT_PUBLIC_API_URL;
 
-export async function fetchProducts() {
+export async function fetchProducts(): Promise<Product[]> {
   const token = localStorage.getItem("accessToken");
 
   const res = await fetch(`${api}/api/products`, {
@@ -14,7 +16,16 @@ export async function fetchProducts() {
   }
 
   const json = await res.json();
-  return json.data;
+  console.log(json.data);
+
+  return json.data.map((product: any) => ({
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    quantity: 0,
+    imageUrl: product.imageUrl,
+  }));
 }
 
 interface CreateSalePayload {

@@ -8,7 +8,6 @@ import { useProducts } from "../hooks/useProducts";
 import { useCartStore } from "../store/useCartStore";
 import { useState } from "react";
 
-
 export default function NewSaleForm() {
   const router = useRouter();
 
@@ -68,9 +67,8 @@ export default function NewSaleForm() {
     productos?.some((p) => (p.quantity ?? 0) > 0) ?? false;
 
   const productosFiltrados = (productos ?? []).filter((p) =>
-    p.name.toLowerCase().includes(busqueda.toLowerCase())
+    p.name.toLowerCase().includes(busqueda.toLowerCase()),
   );
-
 
   return (
     <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
@@ -79,7 +77,7 @@ export default function NewSaleForm() {
           Nueva Venta
         </h2>
         <div className="w-full sm:w-72">
-          <SearchInput value={busqueda} onChange={setBusqueda}/>
+          <SearchInput value={busqueda} onChange={setBusqueda} />
         </div>
       </div>
 
@@ -115,7 +113,8 @@ export default function NewSaleForm() {
                     title={producto.name}
                     description={producto.description}
                     price={producto.price}
-                    quantity={producto.quantity ?? 0} // Asegura un valor numérico plano
+                    quantity={producto.quantity ?? 0}
+                    imageUrl={producto.imageUrl}
                     onIncrease={() => aumentarCantidad(producto.id)}
                     onDecrease={() => disminuirCantidad(producto.id)}
                     onQuantityChange={(cantidad) =>

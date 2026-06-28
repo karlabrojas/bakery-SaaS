@@ -19,6 +19,7 @@ export function useProducts() {
             description: p.description ?? "",
             price: Number(p.price),
             quantity: 0,
+            imageUrl: p.imageUrl,
           })),
         ),
       )
