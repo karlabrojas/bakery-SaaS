@@ -26,7 +26,7 @@ export default function ProductCard({
   onQuantityChange,
 }: ProductCardProps) {
   return (
-    <Card className="w-full flex items-center gap-5 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+    <Card className="w-full flex items-center gap-5 rounded-2xl border border-stone-200 bg-[#FFFCF5] p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="w-32 h-32 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 flex items-center justify-center shrink-0">
         {imageUrl ? (
           <img
@@ -53,7 +53,6 @@ export default function ProductCard({
             ${price.toFixed(2)}
           </span>
 
-          {/* Selector */}
           <div className="flex items-center gap-2 rounded-full bg-stone-100 px-2 py-2 border border-stone-200 shadow-sm">
             <button
               type="button"

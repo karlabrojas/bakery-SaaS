@@ -18,16 +18,17 @@ export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
   const [method, setMethod] = useState<
     "Efectivo" | "Tarjeta" | "Transferencia"
   >("Efectivo");
+
   const [received, setReceived] = useState("");
-  const [cargando, setCargando] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const change = Number(received || 0) - total;
 
-  const esEfectivoInvalido =
-    method === "Efectivo" && (Number(received) < total || !received);
+  const invalidCash =
+    method === "Efectivo" && (!received || Number(received) < total);
 
   const handleConfirm = async () => {
-    setCargando(true);
+    setLoading(true);
     try {
       if (method === "Efectivo") {
         await onConfirm({
@@ -41,89 +42,90 @@ export default function PaymentModal({ total, onConfirm }: PaymentModalProps) {
         });
       }
     } finally {
-      setCargando(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-5 p-1">
-      <div>
-        <h2 className="text-xl font-bold text-[#472D20]">Finalizar Pago</h2>
-        <p className="text-xs text-stone-500 mt-0.5">
-          Selecciona el método con el que pagará el cliente.
+    <div className="w-full space-y-6">
+      <div className="relative -mx-6 -mt-6 bg-[#472D20] pl-6 pr-14 py-5 rounded-t-2xl">
+        <h2 className="text-2xl font-bold text-white">Confirmar Pago</h2>
+        <p className="text-sm text-[#FBEACE] mt-1 leading-normal">
+          Selecciona el método de pago para finalizar la venta.
         </p>
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-xs font-bold uppercase text-stone-600 tracking-wider">
-          Método de pago
-        </label>
-        <PaymentMethods selectedMethod={method} onSelect={setMethod} />
-      </div>
+      <div className="space-y-6">
+        <div className="bg-white rounded-2xl border border-stone-200/80 p-4 text-center shadow-sm">
+          <p className="uppercase tracking-wider text-xs font-bold text-stone-500">
+            Total a cobrar
+          </p>
+          <p className="text-3xl font-black text-[#472D20] mt-1">
+            $
+            {total.toLocaleString("es-MX", {
+              minimumFractionDigits: 2,
+            })}
+          </p>
+        </div>
 
-      <div className="flex justify-between items-center bg-white/60 border border-stone-200 p-4 rounded-xl shadow-sm">
-        <span className="text-stone-600 font-semibold text-sm">
-          Monto Total a Cobrar:
-        </span>
-        <span className="text-2xl font-black text-[#472D20] font-mono">
-          ${total.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-        </span>
-      </div>
+        <div className="space-y-2">
+          <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
+            Método de pago
+          </label>
+          <PaymentMethods selectedMethod={method} onSelect={setMethod} />
+        </div>
 
-      {method === "Efectivo" && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase text-stone-600 tracking-wider block">
-              Dinero recibido
-            </label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 font-mono font-bold text-lg">
-                $
-              </span>
+        {method === "Efectivo" && (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
+                Dinero recibido
+              </label>
               <Input
                 type="number"
                 min="0"
-                step="any"
+                step="0.01"
                 value={received}
                 onChange={(e) => setReceived(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-8 h-12 text-lg font-mono bg-white border-stone-300 focus:border-[#472D20]"
-                autoFocus
+                className="h-14 text-xl text-center font-bold w-full"
               />
             </div>
-          </div>
 
-          <div
-            className={`flex justify-between items-center border p-4 rounded-xl shadow-sm transition-colors duration-200 ${
-              esEfectivoInvalido && received
-                ? "bg-red-50/60 border-red-200"
-                : "bg-[#FBEACE]/40 border-[#B8926B]/20"
-            }`}
-          >
-            <span className="text-stone-600 font-semibold text-sm">
-              {change < 0 ? "Falta por pagar:" : "Cambio para el cliente:"}
-            </span>
-            <span
-              className={`text-xl font-bold font-mono ${
-                change < 0 && received ? "text-red-600" : "text-[#472D20]"
+            <div
+              className={`rounded-2xl border p-5 transition ${
+                invalidCash && received
+                  ? "bg-red-50 border-red-200"
+                  : "bg-[#FBEACE] border-[#B8926B]/30"
               }`}
             >
-              $
-              {Math.abs(change).toLocaleString("es-MX", {
-                minimumFractionDigits: 2,
-              })}
-            </span>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-stone-700">
+                  {change >= 0 ? "Cambio" : "Falta por pagar"}
+                </span>
+                <span
+                  className={`text-2xl font-black ${
+                    change >= 0 ? "text-[#472D20]" : "text-red-600"
+                  }`}
+                >
+                  $
+                  {Math.abs(change).toLocaleString("es-MX", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div className="pt-2">
+      <div className="border-t border-stone-200/80 pt-5">
         <Button
-          className="w-full h-12 text-base font-semibold shadow-md active:scale-[0.99] transition-transform"
+          className="w-full h-14 text-lg font-bold"
+          disabled={loading || invalidCash}
           onClick={handleConfirm}
-          disabled={cargando || esEfectivoInvalido}
         >
-          {cargando ? "Procesando venta..." : "Confirmar Venta"}
+          {loading ? "Procesando venta..." : "Confirmar Venta"}
         </Button>
       </div>
     </div>

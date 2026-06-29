@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Modal from "@/components/ui/Modal";
 import PaymentMethods from "./PaymentMethods";
 import { updateSale, fetchProducts } from "../services/api";
 
@@ -66,12 +67,14 @@ export default function EditSaleModal({
           productId: i.product_id,
           name: product?.name ?? "Producto",
           quantity: String(i.quantity),
+          price: product?.price ?? 0,
+          imageUrl: product?.imageUrl ?? null,
         };
       }),
     );
   }, [sale, products]);
 
-  if (!open || !sale || !sale.id) return null;
+  if (!sale || !sale.id) return null;
 
   const updateQuantity = (index: number, value: string) => {
     setItems((prev) =>
@@ -105,23 +108,22 @@ export default function EditSaleModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#FBEACE] w-full max-w-lg p-6 rounded-2xl shadow-2xl border border-[#B8926B]/30 space-y-5">
-        <div className="flex justify-between items-start border-b border-[#B8926B]/20 pb-3">
-          <div>
-            <h2 className="text-xl font-bold text-[#472D20]">
-              Editar Registro de Venta
-            </h2>
-            <p className="text-xs font-mono font-bold bg-[#472D20]/10 text-[#472D20] px-2 py-0.5 rounded mt-1 inline-block">
-              Folio: {sale.id.substring(0, 8).toUpperCase()}
-            </p>
+    <Modal isOpen={open} onClose={onClose}>
+      <div className="space-y-5">
+        <div className="relative -mx-6 -mt-6 mb-6 bg-[#472D20] pl-6 pr-14 py-5 rounded-t-2xl">
+          <div className="flex items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Editar venta</h2>
+
+              <p className="text-sm text-[#FBEACE]">
+                Actualiza el método de pago o las cantidades.
+              </p>
+
+              <span className="mt-2 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+                Folio #{sale.id.substring(0, 8).toUpperCase()}
+              </span>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-stone-500 hover:text-stone-800 font-bold text-lg"
-          >
-            ✕
-          </button>
         </div>
 
         <div className="space-y-1.5">
@@ -135,53 +137,71 @@ export default function EditSaleModal({
           <h3 className="text-xs font-bold uppercase text-stone-600 tracking-wider">
             Ajustar cantidades
           </h3>
+
           <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
             {items.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between gap-3 bg-white/60 border border-stone-200 p-3 rounded-lg shadow-sm"
+                className="flex items-center justify-between rounded-2xl border border-stone-200 bg-white p-4"
               >
-                <span className="text-sm font-semibold text-stone-800">
-                  {item.name}
-                </span>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden border bg-stone-100 shrink-0">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-stone-400">
+                        Sin foto
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-stone-900">{item.name}</h3>
+                    <p className="text-sm text-stone-500">
+                      ${item.price.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
                 <Input
                   type="number"
-                  min="0"
+                  min={0}
                   value={item.quantity}
                   onChange={(e) => updateQuantity(index, e.target.value)}
-                  className="w-20 text-center font-mono h-9 bg-white border-stone-300 focus:border-[#472D20]"
+                  className="w-20 h-11 text-center font-bold text-lg"
                 />
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex justify-between items-center font-bold border-t border-[#B8926B]/20 pt-3 bg-white/40 p-3 rounded-lg">
-          <span className="text-stone-600 font-medium text-sm">
-            Monto Total Original:
-          </span>
-          <span className="text-lg font-black text-[#472D20] font-mono">
-            ${sale?.total_amount ?? 0}
-          </span>
+        <div className="flex justify-between items-center rounded-2xl border border-stone-200 bg-[#FFFDF8] p-5">
+          <p className="text-sm uppercase tracking-wide text-stone-500">
+            Total de la venta
+          </p>
+          <p className="text-3xl font-black text-[#472D20]">
+            ${sale.total_amount ?? 0}
+          </p>
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <Button
-            variant="secondary"
-            className="w-full h-11 text-sm font-medium"
-            onClick={onClose}
-          >
+        <div className="flex justify-end gap-4 border-t border-stone-200 pt-5">
+          <Button variant="secondary" className="px-8 h-20" onClick={onClose}>
             Cancelar
           </Button>
+
           <Button
-            className="w-full h-11 text-sm font-semibold shadow-md"
+            className="px-8 h-20"
             onClick={handleUpdate}
             disabled={loading}
           >
-            {loading ? "Actualizando..." : "Guardar cambios"}
+            {loading ? "Guardando..." : "Guardar cambios"}
           </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

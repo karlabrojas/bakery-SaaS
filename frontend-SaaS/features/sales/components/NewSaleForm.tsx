@@ -71,7 +71,7 @@ export default function NewSaleForm() {
   );
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto bg-[#FFFCF5] rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
       <div className="bg-[#472D20] px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-xl font-bold text-white tracking-wide">
           Nueva Venta
@@ -129,7 +129,7 @@ export default function NewSaleForm() {
 
         <div className="pt-4 border-t border-stone-100 flex justify-end">
           <Button
-            className={`w-full sm:w-48 h-12 text-base font-bold shadow-md transition-all ${
+            className={`w-full sm:w-48 h-16 text-base font-bold shadow-md transition-all ${
               !hayProductosSeleccionados
                 ? "opacity-40 cursor-not-allowed"
                 : "active:scale-[0.98]"
@@ -137,7 +137,7 @@ export default function NewSaleForm() {
             onClick={continuarVenta}
             disabled={!hayProductosSeleccionados}
           >
-            Continuar Venta
+            Continuar
           </Button>
         </div>
       </div>

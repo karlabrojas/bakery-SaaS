@@ -5,11 +5,9 @@ import { CartItem } from "../types/cart.type";
 
 interface CartStore {
   items: CartItem[];
-
   addItem: (item: CartItem) => void;
-
+  removeItem: (id: string) => void;
   clearCart: () => void;
-
   total: () => number;
 }
 
@@ -42,6 +40,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({
       items: [],
     }),
+  removeItem: (id) =>
+    set((state) => ({
+      items: state.items.filter((item) => item.id !== id),
+    })),
 
   total: () =>
     get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),

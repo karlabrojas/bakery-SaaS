@@ -147,6 +147,13 @@ export default function SalesHistoryTable() {
 
       <ConfirmDeleteModal
         open={openDelete}
+        title="Eliminar venta"
+        message={`¿Está seguro de que desea eliminar la venta ${
+          selectedSale
+            ? `con folio ${selectedSale.id.substring(0, 8).toUpperCase()}`
+            : ""
+        }? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar venta"
         loading={loadingDelete}
         onCancel={() => setOpenDelete(false)}
         onConfirm={confirmDelete}

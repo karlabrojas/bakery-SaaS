@@ -1,32 +1,30 @@
 "use client";
 
 import { useState } from "react";
-
-import Button from "@/components/ui/Button";
-import Modal from "@/components/ui/Modal";
-
-import PaymentModal from "@/features/sales/components/PaymentModal";
-
-import { useCartStore } from "@/features/sales/store/useCartStore";
-
-import { createSale } from "@/features/sales/services/api";
-
-import { generateFolio } from "@/features/sales/utils/generateFolio";
-
 import { useRouter } from "next/navigation";
+import Modal from "@/components/ui/Modal";
+import Cart from "@/features/sales/components/Cart";
+import PaymentModal from "@/features/sales/components/PaymentModal";
+import ConfirmDeleteModal from "@/features/sales/components/ConfirmDeleteModal";
+import { useCartStore } from "@/features/sales/store/useCartStore";
+import { createSale } from "@/features/sales/services/api";
+import { generateFolio } from "@/features/sales/utils/generateFolio";
 
 export default function CartPage() {
   const router = useRouter();
 
   const items = useCartStore((state) => state.items);
-
   const total = useCartStore((state) => state.total());
 
   const clearCart = useCartStore((state) => state.clearCart);
-
-  const [modalOpen, setModalOpen] = useState(false);
-
+  const removeItem = useCartStore((state) => state.removeItem);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [confirmButtonText, setConfirmButtonText] = useState("Eliminar");
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
 
   const confirmPayment = async (paymentData: {
     paymentMethod: "Efectivo" | "Tarjeta" | "Transferencia";
@@ -36,15 +34,17 @@ export default function CartPage() {
 
       await createSale({
         paymentMethod: paymentData.paymentMethod,
-
         items: items.map((item) => ({
           productId: item.id,
           quantity: item.quantity,
         })),
       });
+
       localStorage.setItem("saleFolio", generateFolio());
 
       clearCart();
+
+      setPaymentModalOpen(false);
 
       router.push("/sales/success");
     } catch (error) {
@@ -54,38 +54,72 @@ export default function CartPage() {
     }
   };
 
+  const handleRemoveItem = (id: string) => {
+    setConfirmTitle("Eliminar producto");
+
+    setConfirmMessage(
+      "¿Está seguro de que desea eliminar este producto del carrito?",
+    );
+
+    setConfirmButtonText("Eliminar");
+
+    setConfirmAction(() => () => {
+      removeItem(id);
+      setConfirmOpen(false);
+    });
+
+    setConfirmOpen(true);
+  };
+
+  const handleClearCart = () => {
+    setConfirmTitle("Vaciar carrito");
+
+    setConfirmMessage(
+      "¿Está seguro de que desea eliminar todos los productos del carrito?",
+    );
+
+    setConfirmButtonText("Vaciar carrito");
+
+    setConfirmAction(() => () => {
+      clearCart();
+      setConfirmOpen(false);
+    });
+
+    setConfirmOpen(true);
+  };
+
+  const handleContinueShopping = () => {
+    router.push("/sales");
+  };
+
   return (
     <>
-      <div>
-        <h1 className="text-2xl font-bold mb-4">Resumen de venta</h1>
+      <Cart
+        items={items}
+        total={total}
+        loading={loading}
+        onCheckout={() => setPaymentModalOpen(true)}
+        onContinueShopping={handleContinueShopping}
+        onClearCart={handleClearCart}
+        onRemoveItem={handleRemoveItem}
+      />
 
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex justify-between border p-3 rounded-lg mb-2"
-          >
-            <span>
-              {item.name} x {item.quantity}
-            </span>
-
-            <span>${(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-
-        <div className="mt-4 text-xl font-bold">Total: ${total.toFixed(2)}</div>
-
-        <Button
-          className="w-full mt-6"
-          disabled={loading}
-          onClick={() => setModalOpen(true)}
-        >
-          Confirmar Venta
-        </Button>
-      </div>
-
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+      <Modal
+        isOpen={paymentModalOpen}
+        onClose={() => !loading && setPaymentModalOpen(false)}
+      >
         <PaymentModal total={total} onConfirm={confirmPayment} />
       </Modal>
+
+      <ConfirmDeleteModal
+        open={confirmOpen}
+        title={confirmTitle}
+        message={confirmMessage}
+        confirmText={confirmButtonText}
+        loading={false}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={confirmAction}
+      />
     </>
   );
 }
