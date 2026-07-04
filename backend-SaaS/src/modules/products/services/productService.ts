@@ -67,4 +67,37 @@ export class ProductService {
 
     return product;
   }
+
+  static async update(id: string, data: {
+    name?: string;
+    description?: string;
+    price?: number;
+    category?: string;
+  }) {
+    if (data.name) {
+      const { data: existing } = await supabase
+        .from("products")
+        .select("id")
+        .ilike("name", data.name)
+        .eq("is_active", true)
+        .neq("id", id) 
+        .single();
+
+      if (existing) {
+        throw new Error("Ya existe un producto activo con ese nombre");
+      }
+    }
+
+    const { data: product, error } = await supabase
+      .from("products")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return product;
+  }
+
 }

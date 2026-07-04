@@ -4,7 +4,6 @@ import Button from "@/components/ui/Button";
 import HistoryPage from "./history/page";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import AddProduct from "@/features/products/components/AddProduct";
 
 export default function SalesPage() {
   const router = useRouter();
@@ -28,7 +27,7 @@ export default function SalesPage() {
             </p>
           </div>
           <div className="ml-auto">
-            <AddProduct/>
+            
             <Button className="ml-5" onClick={() => router.push("/sales/new-sales")}>
               Agregar Venta
             </Button>

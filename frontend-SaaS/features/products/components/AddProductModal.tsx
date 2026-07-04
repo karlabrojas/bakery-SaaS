@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { createProduct } from "../services/products.service";
+import { useState, useEffect } from "react";
+import { createProduct, updateProduct } from "../services/products.service";
+import { Product } from "../types/product.type";
 
 interface AddProductModalProps {
     isOpen: boolean;
     onClose: () => void;
+    product?: Product | null;
+    onSuccess: () => void
 }
 
-export default function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
+export default function AddProductModal({ isOpen, onClose, product, onSuccess}: AddProductModalProps) {
+    const modoEditar = !!product; 
+
     const [nombre, setNombre] = useState("");
     const [descripcion, setDescripcion] = useState("");
     const [precio, setPrecio] = useState("");
@@ -24,6 +29,25 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
         categoria: "",
     });
 
+    const limpiarFormulario = () => {
+        setNombre("");
+        setDescripcion("");
+        setPrecio("");
+        setCategoria("");
+        setErrores({ nombre: "", precio: "", descripcion: "", categoria: "" });
+    };
+
+    useEffect(() => {
+        if (product) {
+            setNombre(product.name);
+            setDescripcion(product.description);
+            setPrecio(String(product.price));
+            setCategoria(product.category);
+        } else {
+            limpiarFormulario();
+        }
+    }, [product]);
+
     if (!isOpen) return null;
 
     const validarFormulario = () => {
@@ -34,41 +58,17 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
             categoria: "",
         };
 
-        if (!nombre.trim()) {
-            nuevosErrores.nombre = "El nombre es obligatorio";
-        }
-
-        if (!descripcion.trim()) {
-            nuevosErrores.descripcion = "La descripcion es obligatoria"
-        }
-
+        if (!nombre.trim()) nuevosErrores.nombre = "El nombre es obligatorio";
+        if (!descripcion.trim()) nuevosErrores.descripcion = "La descripcion es obligatoria";
         if (!precio) {
             nuevosErrores.precio = "El precio es obligatorio";
         } else if (Number(precio) <= 0) {
             nuevosErrores.precio = "El precio debe ser mayor a 0";
         }
-
-        if (!categoria) {
-            nuevosErrores.categoria = "La categoría es obligatoria";
-        }
+        if (!categoria) nuevosErrores.categoria = "La categoría es obligatoria";
 
         setErrores(nuevosErrores);
-
-        return !Object.values(nuevosErrores).some((error) => error !== "");
-    };
-
-    const limpiarFormulario = () => {
-        setNombre("");
-        setDescripcion("");
-        setPrecio("");
-        setCategoria("");
-
-        setErrores({
-            nombre: "",
-            precio: "",
-            descripcion: "",
-            categoria: "",
-        });
+        return !Object.values(nuevosErrores).some((e) => e !== "");
     };
 
     const handleGuardar = async () => {
@@ -79,18 +79,27 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
         setErrorServidor("");
 
         try {
-            await createProduct({
-                name: nombre,
-                description: descripcion,
-                price: Number(precio),
-                category: categoria,
-            });
+            if (modoEditar && product) {
+                await updateProduct(product.id, {
+                    name: nombre,
+                    description: descripcion,
+                    price: Number(precio),
+                    category: categoria,
+                });
+            } else {
+                await createProduct({
+                    name: nombre,
+                    description: descripcion,
+                    price: Number(precio),
+                    category: categoria,
+                });
+            }
 
             setExito(true);
-
             setTimeout(() => {
                 setExito(false);
-                limpiarFormulario()
+                limpiarFormulario();
+                onSuccess?.();
                 onClose();
             }, 1500);
 
@@ -119,17 +128,19 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
 
                 <div className="w-full space-y-6 p-6">
                     <div className="relative -mx-6 -mt-6 bg-[#472D20] pl-6 pr-14 py-5 rounded-t-2xl">
-                        <h2 className="text-2xl font-bold text-white">Agregar Producto</h2>
+                        <h2 className="text-2xl font-bold text-white">
+                            {modoEditar ? "Editar Producto" : "Agregar Producto"}
+                        </h2>
                         <p className="text-sm text-[#FBEACE] mt-1 leading-normal">
-                            Completa la información para registrar un nuevo producto.
+                            {modoEditar
+                                ? "Modifica la información del producto."
+                                : "Completa la información para registrar un nuevo producto."}
                         </p>
                     </div>
 
                     <div className="space-y-4">
                         <div className="space-y-1.5">
-                            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                                Nombre *
-                            </label>
+                            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Nombre *</label>
                             <input
                                 type="text"
                                 value={nombre}
@@ -137,15 +148,11 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                                 placeholder="Ej. Concha"
                                 className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
                             />
-                            {errores.nombre && (
-                                <p className="text-sm text-red-600">{errores.nombre}</p>
-                            )}
+                            {errores.nombre && <p className="text-sm text-red-600">{errores.nombre}</p>}
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                                Descripción
-                            </label>
+                            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Descripción</label>
                             <input
                                 type="text"
                                 value={descripcion}
@@ -153,37 +160,25 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                                 placeholder="Ej. Pan dulce tradicional"
                                 className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
                             />
-                            {errores.descripcion && (
-                                <p className="text-sm text-red-600">{errores.descripcion}</p>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                                    Precio *
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={precio}
-                                    onChange={(e) => setPrecio(e.target.value)}
-                                    placeholder="0.00"
-                                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-                                />
-                                {errores.precio && (
-                                    <p className="text-sm text-red-600">{errores.precio}</p>
-                                )}
-                            </div>
-
-
+                            {errores.descripcion && <p className="text-sm text-red-600">{errores.descripcion}</p>}
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                                Categoría *
-                            </label>
+                            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Precio *</label>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={precio}
+                                onChange={(e) => setPrecio(e.target.value)}
+                                placeholder="0.00"
+                                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
+                            />
+                            {errores.precio && <p className="text-sm text-red-600">{errores.precio}</p>}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Categoría *</label>
                             <select
                                 value={categoria}
                                 onChange={(e) => setCategoria(e.target.value)}
@@ -195,27 +190,29 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                                 <option value="pastel">Pastel</option>
                                 <option value="galleta">Galleta</option>
                             </select>
-                            {errores.categoria && (
-                                <p className="text-sm text-red-600">{errores.categoria}</p>
-                            )}
+                            {errores.categoria && <p className="text-sm text-red-600">{errores.categoria}</p>}
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                                imagen *
-                            </label>
-                            <input type="file" accept="image/*" className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white" />
-                        </div>
+                            <div className="space-y-1.5">
+                                <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Imagen *</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white"
+                                />
+                            </div>
                     </div>
 
                     <div className="border-t border-stone-200/80 pt-5">
                         {exito && (
                             <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-4 rounded-xl text-center font-medium mb-4">
-                                Producto guardado correctamente
+                                {modoEditar ? "Producto actualizado correctamente" : "Producto guardado correctamente"}
                             </div>
                         )}
                         {errorServidor && (
-                            <p className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl text-center font-medium mb-4">{errorServidor}</p>
+                            <p className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl text-center font-medium mb-4">
+                                {errorServidor}
+                            </p>
                         )}
                         <button
                             onClick={handleGuardar}
@@ -223,7 +220,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                             className={`w-full h-14 text-lg font-bold bg-[#472D20] text-white rounded-xl transition ${loading ? "opacity-60 cursor-not-allowed" : "hover:bg-[#5c3a2a]"
                                 }`}
                         >
-                            {loading ? "Guardando..." : "Guardar Producto"}
+                            {loading ? "Guardando..." : modoEditar ? "Guardar Cambios" : "Guardar Producto"}
                         </button>
                     </div>
                 </div>
