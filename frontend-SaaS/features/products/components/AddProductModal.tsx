@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createProduct } from "../services/products.service";
 
 interface AddProductModalProps {
     isOpen: boolean;
@@ -11,14 +12,15 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
     const [nombre, setNombre] = useState("");
     const [descripcion, setDescripcion] = useState("");
     const [precio, setPrecio] = useState("");
-    const [stock, setStock] = useState("");
     const [categoria, setCategoria] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [errorServidor, setErrorServidor] = useState("");
+    const [exito, setExito] = useState(false);
 
     const [errores, setErrores] = useState({
         nombre: "",
         descripcion: "",
         precio: "",
-        stock: "",
         categoria: "",
     });
 
@@ -29,7 +31,6 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
             nombre: "",
             descripcion: "",
             precio: "",
-            stock: "",
             categoria: "",
         };
 
@@ -47,12 +48,6 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
             nuevosErrores.precio = "El precio debe ser mayor a 0";
         }
 
-        if (!stock) {
-            nuevosErrores.stock = "El stock es obligatorio";
-        } else if (Number(stock) < 0) {
-            nuevosErrores.stock = "El stock no puede ser negativo";
-        }
-
         if (!categoria) {
             nuevosErrores.categoria = "La categoría es obligatoria";
         }
@@ -62,20 +57,48 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
         return !Object.values(nuevosErrores).some((error) => error !== "");
     };
 
-    const handleGuardar = () => {
-        const formularioValido = validarFormulario();
+    const limpiarFormulario = () => {
+        setNombre("");
+        setDescripcion("");
+        setPrecio("");
+        setCategoria("");
 
+        setErrores({
+            nombre: "",
+            precio: "",
+            descripcion: "",
+            categoria: "",
+        });
+    };
+
+    const handleGuardar = async () => {
+        const formularioValido = validarFormulario();
         if (!formularioValido) return;
 
-        console.log({
-            nombre,
-            descripcion,
-            precio,
-            stock,
-            categoria,
-        });
+        setLoading(true);
+        setErrorServidor("");
 
-        onClose();
+        try {
+            await createProduct({
+                name: nombre,
+                description: descripcion,
+                price: Number(precio),
+                category: categoria,
+            });
+
+            setExito(true);
+
+            setTimeout(() => {
+                setExito(false);
+                limpiarFormulario()
+                onClose();
+            }, 1500);
+
+        } catch (error: any) {
+            setErrorServidor(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -154,22 +177,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                                 )}
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                                    Stock inicial *
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={stock}
-                                    onChange={(e) => setStock(e.target.value)}
-                                    placeholder="0"
-                                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-                                />
-                                {errores.stock && (
-                                    <p className="text-sm text-red-600">{errores.stock}</p>
-                                )}
-                            </div>
+
                         </div>
 
                         <div className="space-y-1.5">
@@ -201,11 +209,21 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                     </div>
 
                     <div className="border-t border-stone-200/80 pt-5">
+                        {exito && (
+                            <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-4 rounded-xl text-center font-medium mb-4">
+                                Producto guardado correctamente
+                            </div>
+                        )}
+                        {errorServidor && (
+                            <p className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl text-center font-medium mb-4">{errorServidor}</p>
+                        )}
                         <button
                             onClick={handleGuardar}
-                            className="w-full h-14 text-lg font-bold bg-[#472D20] text-white rounded-xl hover:bg-[#5c3a2a] transition"
+                            disabled={loading}
+                            className={`w-full h-14 text-lg font-bold bg-[#472D20] text-white rounded-xl transition ${loading ? "opacity-60 cursor-not-allowed" : "hover:bg-[#5c3a2a]"
+                                }`}
                         >
-                            Guardar Producto
+                            {loading ? "Guardando..." : "Guardar Producto"}
                         </button>
                     </div>
                 </div>

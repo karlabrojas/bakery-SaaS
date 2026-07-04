@@ -31,4 +31,40 @@ export class ProductService {
 
     return products;
   }
+
+  static async create(data: {
+    name: string;
+    description: string;
+    price: number;
+    category: string;
+  }) {
+    const { data: existing, error: searchError } = await supabase
+      .from("products")
+      .select("id")
+      .ilike("name", data.name)
+      .eq("is_active", true)
+      .single();
+
+    if (existing) {
+      throw new Error("Ya existe un producto con ese nombre");
+    }
+
+    const { data: product, error } = await supabase
+      .from("products")
+      .insert([
+        {
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          category: data.category,
+          is_active: true,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return product;
+  }
 }
