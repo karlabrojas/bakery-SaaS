@@ -4,13 +4,17 @@ import { useState } from "react";
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { Product } from "@/features/products/types/product.type";
 import AddProductModal from "@/features/products/components/AddProductModal";
+import ConfirmDeleteModal from "@/features/sales/components/ConfirmDeleteModal";
 
 export function InventoryTable() {
-  const { products, loading, error, handleUpdate, loadProducts } = useProducts();
+  const { products, loading, error, handleUpdate, loadProducts, handleDelete } = useProducts();
   const [editando, setEditando] = useState<Product | null>(null);
   const [errorModal, setErrorModal] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [modalAgregar, setModalAgregar] = useState(false);
+  const [eliminando, setEliminando] = useState<Product | null>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
 
   const handleGuardarEdicion = async () => {
     if (!editando) return;
@@ -28,6 +32,17 @@ export function InventoryTable() {
       setErrorModal(err.message);
     } finally {
       setGuardando(false);
+    }
+  };
+
+  const handleConfirmarEliminar = async () => {
+    if (!eliminando) return;
+    setLoadingDelete(true);
+    try {
+      await handleDelete(eliminando.id);
+      setEliminando(null);
+    } finally {
+      setLoadingDelete(false);
     }
   };
 
@@ -86,6 +101,7 @@ export function InventoryTable() {
                       Editar
                     </button>
                     <button
+                      onClick={() => setEliminando(product)}
                       className="px-3 py-1.5 text-xs font-bold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
                     >
                       Eliminar
@@ -101,7 +117,7 @@ export function InventoryTable() {
       <AddProductModal
         isOpen={modalAgregar}
         onClose={() => setModalAgregar(false)}
-        onSuccess={loadProducts} 
+        onSuccess={loadProducts}
       />
 
       <AddProductModal
@@ -109,6 +125,16 @@ export function InventoryTable() {
         onClose={() => setEditando(null)}
         product={editando}
         onSuccess={loadProducts}
+      />
+
+      <ConfirmDeleteModal
+        open={!!eliminando}
+        title="Eliminar producto"
+        message={`¿Estás seguro que deseas eliminar "${eliminando?.name}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        loading={loadingDelete}
+        onCancel={() => setEliminando(null)}
+        onConfirm={handleConfirmarEliminar}
       />
     </>
   );

@@ -100,4 +100,16 @@ export class ProductService {
     return product;
   }
 
+  static async delete(id: string) {
+    const { error } = await supabase
+      .from("products")
+      .update({ is_active: false }) 
+      .eq("id", id);
+
+    if (error) throw error;
+
+    return { message: "Producto eliminado correctamente" };
+  }
+
+
 }

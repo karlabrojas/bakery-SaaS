@@ -139,7 +139,7 @@ export default function EditSaleModal({
             Ajustar cantidades
           </h3>
 
-          <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
+          <div className="space-y-1.5 max-h-50 overflow-y-auto pr-1">
             {items.map((item, index) => (
               <div
                 key={index}

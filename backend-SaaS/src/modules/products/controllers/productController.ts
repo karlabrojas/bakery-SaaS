@@ -86,4 +86,29 @@ export class ProductController {
     }
   }
 
+  static async delete(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      if (Array.isArray(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "El id no es válido",
+      });
+    }
+
+      const result = await ProductService.delete(id);
+
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        error,
+      });
+    }
+  }
+
 }

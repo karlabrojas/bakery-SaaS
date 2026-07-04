@@ -65,3 +65,11 @@ export async function updateProduct(id: string, data: CreateProductDto) {
     if (!res.ok) throw new Error(json.message || "Error al actualizar producto");
     return json;
 }
+
+export async function deleteProduct(id: string) {
+    const res = await fetch(`${api}/api/products/${id}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Error al eliminar producto");
+    return res.json();
+}

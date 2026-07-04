@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchProducts, updateProduct } from "../services/products.service";
+import { deleteProduct, fetchProducts, updateProduct } from "../services/products.service";
 import { Product } from "../types/product.type";
 
 export function useProducts() {
@@ -40,5 +40,14 @@ export function useProducts() {
         }
     };
 
-    return { products, loading, error, handleUpdate, loadProducts };
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteProduct(id);
+            setProducts((prev) => prev.filter((p) => p.id !== id));
+        } catch (err: any) {
+            setError(err.message);
+        }
+    };
+
+    return { products, loading, error, handleUpdate, loadProducts, handleDelete };
 }
