@@ -5,6 +5,7 @@ import { useProducts } from "@/features/products/hooks/useProducts";
 import { Product } from "@/features/products/types/product.type";
 import AddProductModal from "@/features/products/components/AddProductModal";
 import ConfirmDeleteModal from "@/features/sales/components/ConfirmDeleteModal";
+import { Search } from "lucide-react";
 
 export function InventoryTable() {
   const { products, loading, error, handleUpdate, loadProducts, handleDelete } = useProducts();
@@ -14,7 +15,7 @@ export function InventoryTable() {
   const [modalAgregar, setModalAgregar] = useState(false);
   const [eliminando, setEliminando] = useState<Product | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
-
+  const [busqueda, setBusqueda] = useState("");
 
   const handleGuardarEdicion = async () => {
     if (!editando) return;
@@ -57,14 +58,27 @@ export function InventoryTable() {
     <p className="text-red-500 text-center">{error}</p>
   );
 
+  const productosFiltrados = products.filter((product) =>
+    product.name.toLowerCase().includes(busqueda.toLowerCase())
+  );
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex items-center gap-5 mb-6 mt-6">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <input
+            type="text"
+            placeholder="Buscar producto..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-stone-200 rounded-xl bg-white focus:outline-none focus:border-[#472D20] transition"
+          />
+        </div>
         <button
           onClick={() => setModalAgregar(true)}
-          className="px-5 py-2.5 bg-[#472D20] text-white text-sm font-bold rounded-xl hover:bg-[#5c3a2a] transition"
+          className="px-5 py-2 bg-[#472D20] text-white text-sm font-bold rounded-xl hover:bg-[#5c3a2a] transition whitespace-nowrap"
         >
-          + Agregar Producto
+          + Agregar producto
         </button>
       </div>
 
@@ -80,14 +94,14 @@ export function InventoryTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
-            {products.length === 0 ? (
+            {productosFiltrados.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center py-12 text-stone-400">
-                  No hay productos registrados.
+                  {busqueda ? "No se encontraron productos." : "No hay productos registrados."}
                 </td>
               </tr>
             ) : (
-              products.map((product) => (
+              productosFiltrados.map((product) => (
                 <tr key={product.id} className="hover:bg-stone-50 transition">
                   <td className="px-4 py-3 font-medium">{product.name}</td>
                   <td className="px-4 py-3 text-stone-500">{product.description}</td>

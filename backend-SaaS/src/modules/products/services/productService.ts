@@ -81,10 +81,10 @@ export class ProductService {
         .ilike("name", data.name)
         .eq("is_active", true)
         .neq("id", id) 
-        .single();
+        .maybeSingle();
 
       if (existing) {
-        throw new Error("Ya existe un producto activo con ese nombre");
+        throw new Error("Ya existe un producto con ese nombre");
       }
     }
 
