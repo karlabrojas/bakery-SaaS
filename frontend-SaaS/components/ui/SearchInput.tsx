@@ -7,8 +7,8 @@ interface SearchInputProps {
 
 export default function SearchInput({ value, onChange }: SearchInputProps) {
   return (
-    <div className="relative">
-      <Search size={18} className="absolute left-3 top-3" />
+    <div className="relative pt-4">
+      <Search size={18} className="absolute left-3 top-8" />
 
       <input
         value={value}
@@ -16,11 +16,11 @@ export default function SearchInput({ value, onChange }: SearchInputProps) {
         placeholder="Buscar..."
         className="
           w-full
-          bg-[#B8926B]
-          border-[#B8926B]
+          bg-[#f1e1d1]
+          border-[#f2c79d]
           border-4
           rounded-lg
-          text-white
+          text-black
           pl-10
           py-2
           mb-4

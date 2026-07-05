@@ -1,115 +1,198 @@
 import { supabase } from "../../../config/supabase";
+import { StorageService } from "../../storage/Storage.service";
+
+interface CreateProductDto {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+}
+
+interface UpdateProductDto {
+  name?: string;
+  description?: string;
+  price?: number;
+  category?: string;
+}
 
 export class ProductService {
-  static async getAll() {
+  static async getAll(bakeryId: string) {
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .eq("bakery_id", bakeryId)
       .eq("is_active", true)
       .order("name");
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    const products = data.map((product) => {
-      let imageUrl = null;
-
-      if (product.imagen_path) {
-        const { data } = supabase.storage
-          .from("product-images")
-          .getPublicUrl(product.imagen_path);
-
-        imageUrl = data.publicUrl;
-      }
-
-      return {
-        ...product,
-        imageUrl,
-      };
-    });
-
-    return products;
+    return data.map((product) => ({
+      ...product,
+      imageUrl: StorageService.getPublicUrl(product.imagen_path),
+    }));
   }
 
-  static async create(data: {
-    name: string;
-    description: string;
-    price: number;
-    category: string;
-  }) {
-    const { data: existing, error: searchError } = await supabase
+  static async getById(id: string, bakeryId: string) {
+    const { data, error } = await supabase
       .from("products")
-      .select("id")
-      .ilike("name", data.name)
+      .select("*")
+      .eq("id", id)
+      .eq("bakery_id", bakeryId)
       .eq("is_active", true)
       .single();
 
-    if (existing) {
-      throw new Error("Ya existe un producto con ese nombre");
+    if (error) {
+      throw new Error("Producto no encontrado");
     }
 
-    const { data: product, error } = await supabase
+    return {
+      ...data,
+      imageUrl: StorageService.getPublicUrl(data.imagen_path),
+    };
+  }
+
+  static async create(
+    bakeryId: string,
+    body: CreateProductDto,
+    file?: Express.Multer.File,
+  ) {
+    const { data: existing } = await supabase
       .from("products")
-      .insert([
-        {
-          name: data.name,
-          description: data.description,
-          price: data.price,
-          category: data.category,
-          is_active: true,
-        },
-      ])
+      .select("id")
+      .eq("bakery_id", bakeryId)
+      .ilike("name", body.name)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error("Ya existe un producto con ese nombre.");
+    }
+
+    let imagePath: string | null = null;
+
+    if (file) {
+      imagePath = await StorageService.uploadProductImage(file);
+    }
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert({
+        bakery_id: bakeryId,
+        name: body.name,
+        description: body.description,
+        price: body.price,
+        category: body.category,
+        imagen_path: imagePath,
+        is_active: true,
+      })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (imagePath) {
+        await StorageService.deleteImage(imagePath);
+      }
 
-    return product;
+      throw error;
+    }
+
+    return {
+      ...data,
+      imageUrl: StorageService.getPublicUrl(data.imagen_path),
+    };
   }
 
-  static async update(id: string, data: {
-    name?: string;
-    description?: string;
-    price?: number;
-    category?: string;
-  }) {
-    if (data.name) {
+  static async update(
+    id: string,
+    bakeryId: string,
+    body: UpdateProductDto,
+    file?: Express.Multer.File,
+  ) {
+    const { data: product, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .eq("bakery_id", bakeryId)
+      .eq("is_active", true)
+      .single();
+
+    if (error || !product) {
+      throw new Error("Producto no encontrado.");
+    }
+
+    if (body.name) {
       const { data: existing } = await supabase
         .from("products")
         .select("id")
-        .ilike("name", data.name)
+        .eq("bakery_id", bakeryId)
+        .ilike("name", body.name)
+        .neq("id", id)
         .eq("is_active", true)
-        .neq("id", id) 
         .maybeSingle();
 
       if (existing) {
-        throw new Error("Ya existe un producto con ese nombre");
+        throw new Error("Ya existe un producto con ese nombre.");
       }
     }
 
-    const { data: product, error } = await supabase
+    let imagePath = product.imagen_path;
+
+    if (file) {
+      imagePath = await StorageService.replaceImage(product.imagen_path, file);
+    }
+
+    const { data, error: updateError } = await supabase
       .from("products")
-      .update(data)
+      .update({
+        ...body,
+        imagen_path: imagePath,
+      })
       .eq("id", id)
+      .eq("bakery_id", bakeryId)
       .select()
       .single();
 
-    if (error) throw error;
+    if (updateError) {
+      throw updateError;
+    }
 
-    return product;
+    return {
+      ...data,
+      imageUrl: StorageService.getPublicUrl(data.imagen_path),
+    };
   }
 
-  static async delete(id: string) {
-    const { error } = await supabase
+  static async delete(id: string, bakeryId: string) {
+    const { data: product, error } = await supabase
       .from("products")
-      .update({ is_active: false }) 
-      .eq("id", id);
+      .select("imagen_path")
+      .eq("id", id)
+      .eq("bakery_id", bakeryId)
+      .single();
 
-    if (error) throw error;
+    if (error || !product) {
+      throw new Error("Producto no encontrado.");
+    }
 
-    return { message: "Producto eliminado correctamente" };
+    if (product.imagen_path) {
+      await StorageService.deleteImage(product.imagen_path);
+    }
+
+    const { error: deleteError } = await supabase
+      .from("products")
+      .update({
+        is_active: false,
+        imagen_path: null,
+      })
+      .eq("id", id)
+      .eq("bakery_id", bakeryId);
+
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    return {
+      message: "Producto eliminado correctamente.",
+    };
   }
-
-
 }

@@ -1,6 +1,12 @@
 "use client";
 
-import { X, ShoppingCart, Package, ClipboardList } from "lucide-react";
+import {
+  X,
+  ShoppingCart,
+  Package,
+  ClipboardList,
+  Croissant,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -18,6 +24,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       icon: ShoppingCart,
     },
     {
+      name: "Productos",
+      href: "/products",
+      icon: Croissant,
+    },
+    {
       name: "Inventario",
       href: "/inventory",
       icon: Package,
@@ -31,7 +42,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Overlay */}
       <div
         onClick={onClose}
         className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
@@ -39,14 +49,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         }`}
       />
 
-      {/* Sidebar Panel */}
       <aside
         className={`fixed top-0 left-0 h-screen w-72 bg-[#5A2E1F] text-[#F8F1E4] z-50 shadow-2xl flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div>
-          {/* Header Close Button */}
           <div className="flex justify-end p-4">
             <button
               onClick={onClose}
@@ -56,7 +64,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </button>
           </div>
 
-          {/* User Profile Section */}
           <div className="flex flex-col items-center px-6 pb-6 border-b border-white/10">
             <div className="w-20 h-20 rounded-full bg-[#E8D6AF] shadow-inner ring-4 ring-[#E8D6AF]/20" />
             <h2 className="text-xl font-bold mt-4 tracking-wide">Usuario</h2>
@@ -65,14 +72,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </p>
           </div>
 
-          {/* Section Heading */}
           <div className="px-6 pt-6">
             <p className="text-xs font-bold uppercase tracking-wider text-[#E8D6AF]/60">
               Dashboard
             </p>
           </div>
 
-          {/* Navigation Links */}
           <nav className="mt-4 px-3 space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -104,7 +109,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
         </div>
 
-        {/* Footer Brand (Opcional, añade estructura visual premium) */}
         <div className="p-4 text-center border-t border-white/5 bg-black/10">
           <p className="text-xs text-[#E8D6AF]/40 tracking-widest font-mono"></p>
         </div>
