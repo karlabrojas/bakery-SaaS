@@ -1,16 +1,17 @@
 import type { NextConfig } from "next";
 
-const supabaseHostname = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!)
-  .hostname;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: supabaseHostname,
-      },
-    ],
+    remotePatterns: supabaseUrl
+      ? [
+          {
+            protocol: "https",
+            hostname: new URL(supabaseUrl).hostname,
+          },
+        ]
+      : [],
   },
 };
 
