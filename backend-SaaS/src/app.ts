@@ -55,6 +55,7 @@ app.post("/orders", async (req, res) => {
 
 // Rutas de módulos
 app.use("/api/products", productRoutes);
+// app.use("/api/products", productRoutes)
 app.use("/api/sales", saleRoutes);
 app.use("/api/auth", authRoutes);
 

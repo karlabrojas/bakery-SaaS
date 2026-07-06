@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-
 import jwt from "jsonwebtoken";
-
 import { JwtPayload } from "../types/jwt-payload";
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {

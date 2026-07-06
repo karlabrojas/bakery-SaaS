@@ -5,7 +5,8 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import PaymentMethods from "./PaymentMethods";
-import { updateSale, fetchProducts } from "../services/api";
+import { updateSale } from "../services/api";
+import { fetchProducts } from "@/features/products/services/products.service";
 
 interface Props {
   open: boolean;
@@ -138,7 +139,7 @@ export default function EditSaleModal({
             Ajustar cantidades
           </h3>
 
-          <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
+          <div className="space-y-1.5 max-h-50 overflow-y-auto pr-1">
             {items.map((item, index) => (
               <div
                 key={index}
