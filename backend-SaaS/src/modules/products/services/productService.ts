@@ -23,15 +23,12 @@ export class ProductService {
       .eq("bakery_id", bakeryId)
       .eq("is_active", true)
       .order("name");
-
     if (error) throw error;
-
-    return data.map((product) => ({
+    return data.map((product: { imagen_path: string | null; }) => ({
       ...product,
       imageUrl: StorageService.getPublicUrl(product.imagen_path),
     }));
   }
-
   static async getById(id: string, bakeryId: string) {
     const { data, error } = await supabase
       .from("products")
@@ -40,17 +37,14 @@ export class ProductService {
       .eq("bakery_id", bakeryId)
       .eq("is_active", true)
       .single();
-
     if (error) {
       throw new Error("Producto no encontrado");
     }
-
     return {
       ...data,
       imageUrl: StorageService.getPublicUrl(data.imagen_path),
     };
   }
-
   static async create(
     bakeryId: string,
     body: CreateProductDto,
@@ -63,17 +57,13 @@ export class ProductService {
       .ilike("name", body.name)
       .eq("is_active", true)
       .maybeSingle();
-
     if (existing) {
       throw new Error("Ya existe un producto con ese nombre.");
     }
-
     let imagePath: string | null = null;
-
     if (file) {
       imagePath = await StorageService.uploadProductImage(file);
     }
-
     const { data, error } = await supabase
       .from("products")
       .insert({
@@ -87,21 +77,19 @@ export class ProductService {
       })
       .select()
       .single();
-
     if (error) {
       if (imagePath) {
         await StorageService.deleteImage(imagePath);
       }
-
       throw error;
     }
-
     return {
       ...data,
       imageUrl: StorageService.getPublicUrl(data.imagen_path),
     };
   }
 
+  //****   */
   static async update(
     id: string,
     bakeryId: string,
@@ -115,11 +103,9 @@ export class ProductService {
       .eq("bakery_id", bakeryId)
       .eq("is_active", true)
       .single();
-
     if (error || !product) {
       throw new Error("Producto no encontrado.");
     }
-
     if (body.name) {
       const { data: existing } = await supabase
         .from("products")
@@ -129,18 +115,14 @@ export class ProductService {
         .neq("id", id)
         .eq("is_active", true)
         .maybeSingle();
-
       if (existing) {
         throw new Error("Ya existe un producto con ese nombre.");
       }
     }
-
     let imagePath = product.imagen_path;
-
     if (file) {
       imagePath = await StorageService.replaceImage(product.imagen_path, file);
     }
-
     const { data, error: updateError } = await supabase
       .from("products")
       .update({
@@ -151,17 +133,14 @@ export class ProductService {
       .eq("bakery_id", bakeryId)
       .select()
       .single();
-
     if (updateError) {
       throw updateError;
     }
-
     return {
       ...data,
       imageUrl: StorageService.getPublicUrl(data.imagen_path),
     };
   }
-
   static async delete(id: string, bakeryId: string) {
     const { data: product, error } = await supabase
       .from("products")
@@ -169,15 +148,12 @@ export class ProductService {
       .eq("id", id)
       .eq("bakery_id", bakeryId)
       .single();
-
     if (error || !product) {
       throw new Error("Producto no encontrado.");
     }
-
     if (product.imagen_path) {
       await StorageService.deleteImage(product.imagen_path);
     }
-
     const { error: deleteError } = await supabase
       .from("products")
       .update({
@@ -186,11 +162,9 @@ export class ProductService {
       })
       .eq("id", id)
       .eq("bakery_id", bakeryId);
-
     if (deleteError) {
       throw deleteError;
     }
-
     return {
       message: "Producto eliminado correctamente.",
     };

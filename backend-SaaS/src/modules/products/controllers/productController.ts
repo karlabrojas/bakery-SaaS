@@ -21,9 +21,7 @@ export class ProductController {
   static async getById(req: Request, res: Response) {
     try {
       const id = req.params.id as string;
-
       const product = await ProductService.getById(id, req.user!.bakeryId);
-
       return res.status(200).json({
         success: true,
         data: product,
