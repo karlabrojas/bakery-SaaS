@@ -1,51 +1,22 @@
-import express from "express";
 import dotenv from "dotenv";
-import cors from "cors";
-import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
-const app = express();
+import app from "./app";
 
-app.use(cors());
+const PORT = process.env.PORT || 4000;
 
-app.use(express.json());
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_KEY!,
-);
-
-app.post("/orders", async (req, res) => {
+async function bootstrap() {
   try {
-    const { name, email, problem } = req.body;
-
-    const { data, error } = await supabase
-      .from("landing_data")
-      .insert([
-        {
-          name,
-          email,
-          problem,
-        },
-      ])
-      .select();
-
-    if (error) {
-      return res.status(500).json(error);
-    }
-
-    return res.status(201).json({
-      ok: true,
-      data,
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    return res.status(500).json({
-      ok: false,
-      error: "Error del servidor",
-    });
+    console.error(error);
+
+    process.exit(1);
   }
-});
+}
 
 app.listen(4000, () => {
   console.log("Servidor corriendo en puerto 4000");

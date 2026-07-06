@@ -81,7 +81,7 @@ Desarrollar una plataforma SaaS que ayude a panaderías y reposterías a:
 
 ### Autenticación
 
-- Supabase Auth
+- JWT + Refresh Token
 
 ## 📂 Estructura del proyecto
 
