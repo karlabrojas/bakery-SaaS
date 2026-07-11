@@ -33,7 +33,13 @@ export function useProducts() {
         category: string;
     }) => {
         try {
-            await updateProduct(id, data);
+            const formData = new FormData(); 
+            formData.append("name", data.name);
+            formData.append("description", data.description);
+            formData.append("price", String(data.price));
+            formData.append("category", data.category);
+
+            await updateProduct(id, formData); 
             await loadProducts();
         } catch (err: any) {
             throw err;

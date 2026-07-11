@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Tag, ChevronDown } from "lucide-react";
 
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { Product } from "@/features/products/types/product.type";
@@ -24,9 +24,19 @@ export default function InventoryTable() {
 
   const [busqueda, setBusqueda] = useState("");
 
-  const productosFiltrados = products.filter((product) =>
-    product.name.toLowerCase().includes(busqueda.toLowerCase()),
-  );
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
+
+  const productosFiltrados = products.filter((product) => {
+    const coincideNombre = product.name
+      .toLowerCase()
+      .includes(busqueda.toLowerCase());
+
+    const coincideCategoria = categoriaSeleccionada
+      ? product.category === categoriaSeleccionada
+      : true;
+
+    return coincideNombre && coincideCategoria;
+  });
 
   const handleConfirmarEliminar = async () => {
     if (!eliminando) return;
@@ -43,6 +53,8 @@ export default function InventoryTable() {
       setLoadingDelete(false);
     }
   };
+
+
 
   if (loading) {
     return (
@@ -64,14 +76,38 @@ export default function InventoryTable() {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-        <div className="w-full md:w-72">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
+
+        <div className="w-full sm:max-w-xs">
           <SearchInput value={busqueda} onChange={setBusqueda} />
         </div>
 
-        <Button onClick={() => setModalAgregar(true)}>
-          + Agregar producto
-        </Button>
+        <div className="relative w-full sm:w-auto">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Tag className="w-4 h-4 text-[#a8956e]" />
+          </span>
+          <select
+            value={categoriaSeleccionada}
+            onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+            className="w-full sm:min-w-44 pl-10 pr-9 py-3.5 text-sm text-stone-700bg-[#fdf6ec] border border-[#e8d5b7] rounded-xl appearance-none cursor-pointer focus:outline-none focus:border-[#472D20] transition"
+          >
+            <option value="">Todas las categorías</option>
+            <option value="pan_dulce">Pan dulce</option>
+            <option value="pan_salado">Pan salado</option>
+            <option value="pastel">Pastel</option>
+            <option value="galleta">Galleta</option>
+          </select>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <ChevronDown className="w-4 h-4 text-[#a8956e]" />
+          </span>
+        </div>
+
+        <div className="sm:ml-auto w-full sm:w-auto">
+          <Button className="w-full sm:w-auto" onClick={() => setModalAgregar(true)}>
+            + Agregar producto
+          </Button>
+        </div>
+
       </div>
 
       {/* Tabla */}
