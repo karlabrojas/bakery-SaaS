@@ -1,4 +1,5 @@
 import { LoginDto, RegisterDto } from "../types/auth.types";
+import { toast } from "sonner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -53,10 +54,17 @@ export class AuthService {
       credentials: "include",
     });
 
-    const result = await response.json();
+    let result: any = {};
+
+    try {
+      result = await response.json();
+    } catch {
+      result = {};
+    }
 
     if (!response.ok) {
-      throw new Error(result.message);
+      logoutExpiredSession();
+      throw new Error(result.message || "La sesión ha expirado");
     }
 
     return result;
@@ -77,5 +85,22 @@ export class AuthService {
     }
   }
 }
+
+let sessionExpired = false;
+
+export const logoutExpiredSession = () => {
+  if (sessionExpired) return;
+
+  sessionExpired = true;
+
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("user");
+
+  toast.error("Tu sesión ha expirado. Inicia sesión nuevamente.");
+
+  setTimeout(() => {
+    window.location.href = "/login";
+  }, 3000);
+};
 
 export const authService = new AuthService();
