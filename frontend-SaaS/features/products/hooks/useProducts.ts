@@ -11,6 +11,7 @@ export function useProducts() {
 
     const loadProducts = async () => {
         setLoading(true);
+      
         try {
             const data = await fetchAllProducts();
             setProducts(data);
