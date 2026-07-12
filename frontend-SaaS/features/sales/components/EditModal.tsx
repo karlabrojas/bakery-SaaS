@@ -6,7 +6,7 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import PaymentMethods from "./PaymentMethods";
 import { updateSale } from "../services/api";
-import { fetchProducts } from "@/features/products/services/products.service";
+import { fetchAllProducts } from "@/features/products/services/products.service";
 
 interface Props {
   open: boolean;
@@ -45,7 +45,7 @@ export default function EditSaleModal({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchProducts()
+    fetchAllProducts()
       .then((res) => {
         setProducts(res.filter((p: any) => p && p.id));
       })
