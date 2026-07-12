@@ -68,28 +68,35 @@ export class AuthController {
       });
     }
   }
+
   /** Refresh token */
   async refresh(req: Request, res: Response) {
-    const refreshToken = req.cookies.refreshToken;
+    try {
+      const refreshToken = req.cookies.refreshToken;
 
-    if (!refreshToken) {
+      if (!refreshToken) {
+        return res.status(401).json({
+          message: "Refresh token requerido",
+        });
+      }
+
+      const result = await authService.refresh(refreshToken);
+
+      res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.status(200).json({
+        accessToken: result.accessToken,
+      });
+    } catch (error: any) {
       return res.status(401).json({
-        message: "Refresh token requerido",
+        message: error.message || "No fue posible refrescar la sesión",
       });
     }
-
-    const result = await authService.refresh(refreshToken);
-
-    res.cookie("refreshToken", result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return res.status(200).json({
-      accessToken: result.accessToken,
-    });
   }
 
   /** Cerrar sesión */
@@ -101,7 +108,10 @@ export class AuthController {
         });
       }
 
-      await authService.logout(req.user.userId, req.user.sessionId);
+      const result = await authService.logout(
+        req.user.userId,
+        req.user.sessionId,
+      );
 
       res.clearCookie("refreshToken", {
         httpOnly: true,
@@ -109,10 +119,10 @@ export class AuthController {
         sameSite: "strict",
       });
 
-      return res.sendStatus(204);
-    } catch (error) {
-      return res.status(500).json({
-        message: "Error al cerrar sesión",
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(400).json({
+        message: error.message || "Error al cerrar sesión",
       });
     }
   }
