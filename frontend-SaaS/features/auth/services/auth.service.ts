@@ -48,25 +48,33 @@ export class AuthService {
   }
 
   async refresh() {
-    const response = await fetch(`${API_URL}/auth/refresh`, {
+    const response = await fetch(`${API_URL}/api/auth/refresh`, {
       method: "POST",
-
       credentials: "include",
     });
 
-    return response.json();
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message);
+    }
+
+    return result;
   }
 
   async logout(accessToken: string) {
-    await fetch(`${API_URL}/auth/logout`, {
+    const response = await fetch(`${API_URL}/api/auth/logout`, {
       method: "POST",
-
       credentials: "include",
-
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+
+    if (!response.ok) {
+      const result = await response.json();
+      throw new Error(result.message);
+    }
   }
 }
 

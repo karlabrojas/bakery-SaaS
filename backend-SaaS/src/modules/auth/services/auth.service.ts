@@ -116,13 +116,15 @@ export class AuthService {
   ) {
     const { email, password } = data;
 
-    const response = await supabase
+    const { data: user, error } = await supabase
       .from("users")
       .select("*")
       .eq("email", email)
-      .single();
+      .maybeSingle();
 
-    const user = response.data as UserEntity | null;
+    if (error) {
+      throw new Error("Error al consultar el usuario");
+    }
 
     if (!user) {
       throw new Error("Credenciales inválidas");
@@ -161,6 +163,14 @@ export class AuthService {
     });
 
     return {
+      user: {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        role: user.role,
+        bakery_id: user.bakery_id,
+      },
       accessToken,
       refreshToken,
     };
@@ -222,13 +232,42 @@ export class AuthService {
   /** Cierre de sesión */
 
   async logout(userId: string, sessionId: string) {
-    await supabase
+    // Buscar la sesión activa
+    const { data: session, error } = await supabase
+      .from("sessions")
+      .select("*")
+      .eq("id", sessionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error("Error al consultar la sesión");
+    }
+
+    if (!session) {
+      throw new Error("Sesión no encontrada");
+    }
+
+    if (session.is_revoked) {
+      throw new Error("La sesión ya fue cerrada");
+    }
+
+    // Revocar la sesión
+    const { error: updateError } = await supabase
       .from("sessions")
       .update({
         is_revoked: true,
       })
       .eq("id", sessionId)
       .eq("user_id", userId);
+
+    if (updateError) {
+      throw new Error("No se pudo cerrar la sesión");
+    }
+
+    return {
+      message: "Sesión cerrada correctamente",
+    };
   }
 
   private generateTokens(payload: JwtPayload) {
