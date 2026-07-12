@@ -81,19 +81,54 @@ export class ProductController {
 
   static async delete(req: Request, res: Response) {
     try {
-      const id = req.params.id as string;
+      const { id } = req.params;
+      const result = await ProductService.delete(id as string, req.user!.bakeryId);
+      return res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+      if (error.message === "TIENE_VENTAS") {
+        return res.status(409).json({
+          success: false,
+          tieneVentas: true,
+          message: "No se puede eliminar este producto porque tiene historial de ventas.",
+        });
+      }
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-      const response = await ProductService.delete(id, req.user!.bakeryId);
+  static async getAllIncluyendoInactivos(req: Request, res: Response) {
+    try {
+      const products = await ProductService.getAllIncluyendoInactivos(req.user!.bakeryId);
 
       return res.status(200).json({
         success: true,
-        ...response,
+        data: products,
       });
     } catch (error: any) {
-      return res.status(400).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
+    }
+  }
+
+  static async desactivarProducto(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const result = await ProductService.desactivarProducto(id as string, req.user!.bakeryId);
+      return res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  static async activarProducto(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const result = await ProductService.activarProducto(id as string);
+      return res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      return res.status(500).json({ success: false, error });
     }
   }
 }

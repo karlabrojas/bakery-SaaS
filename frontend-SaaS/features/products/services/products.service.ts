@@ -31,6 +31,38 @@ export async function fetchProducts(): Promise<Product[]> {
   }));
 }
 
+export async function fetchAllProducts() {
+  const res = await fetch(`${api}/api/products/all`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  if (!res.ok) throw new Error("Error al obtener productos");
+  const json = await res.json();
+  return json.data;
+}
+
+export async function deactivateProduct(id: string) {
+  const res = await fetch(`${api}/api/products/${id}/deactivate`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  if (!res.ok) throw new Error("Error al desactivar el producto");
+  return res.json();
+}
+
+export async function activarProduct(id: string) {
+  const res = await fetch(`${api}/api/products/${id}/activate`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  if (!res.ok) throw new Error("Error al activar el producto");
+  return res.json();
+}
 export async function fetchProductById(id: string): Promise<Product> {
   const response = await fetch(`${api}/api/products/${id}`, {
     headers: {

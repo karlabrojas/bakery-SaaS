@@ -13,7 +13,7 @@ import Button from "@/components/ui/Button";
 import SearchInput from "@/components/ui/SearchInput";
 
 export default function InventoryTable() {
-  const { products, loading, error, loadProducts, handleDelete } =
+  const { products, loading, error, loadProducts, handleDelete, handleActivate, handleDeactivate } =
     useProducts();
 
   const [editando, setEditando] = useState<Product | null>(null);
@@ -21,10 +21,18 @@ export default function InventoryTable() {
 
   const [eliminando, setEliminando] = useState<Product | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState("");
+
 
   const [busqueda, setBusqueda] = useState("");
 
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
+
+
+  const [activando, setActivando] = useState<Product | null>(null);
+  const [desactivando, setDesactivando] = useState<Product | null>(null);
+  const [loadingActivar, setLoadingActivar] = useState(false);
+  const [loadingDesactivar, setLoadingDesactivar] = useState(false);
 
   const productosFiltrados = products.filter((product) => {
     const coincideNombre = product.name
@@ -40,21 +48,48 @@ export default function InventoryTable() {
 
   const handleConfirmarEliminar = async () => {
     if (!eliminando) return;
-
     setLoadingDelete(true);
-
+    setErrorEliminar("");
     try {
       await handleDelete(eliminando.id);
-
       setEliminando(null);
-
       loadProducts();
+    } catch (err: any) {
+      if (err.tieneVentas) {
+        setErrorEliminar(
+          "No se puede eliminar este producto porque tiene historial de ventas. Puedes desactivarlo en su lugar."
+        );
+      } else {
+        setErrorEliminar(err.message);
+      }
     } finally {
       setLoadingDelete(false);
     }
   };
 
+  const handleConfirmarDesactivar = async () => {
+    if (!desactivando) return;
+    setLoadingDesactivar(true);
+    try {
+      await handleDeactivate(desactivando.id);
+      setDesactivando(null);
+      loadProducts();
+    } finally {
+      setLoadingDesactivar(false);
+    }
+  };
 
+  const handleConfirmarActivar = async () => {
+    if (!activando) return;
+    setLoadingActivar(true);
+    try {
+      await handleActivate(activando.id);
+      setActivando(null);
+      loadProducts();
+    } finally {
+      setLoadingActivar(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -135,8 +170,10 @@ export default function InventoryTable() {
             productosFiltrados.map((product) => (
               <tr
                 key={product.id}
-                className="border-b border-stone-100 last:border-none hover:bg-stone-50/50 transition-colors"
-              >
+                className={`border-b border-stone-100 last:border-none transition-colors ${product.is_active
+                  ? "hover:bg-stone-50/50"
+                  : "bg-red-50/30 hover:bg-red-50/50 opacity-70" 
+                  }`}              >
                 {/* Imagen */}
 
                 <td className="px-4 py-3">
@@ -156,7 +193,15 @@ export default function InventoryTable() {
                 </td>
 
                 <td className="px-4 py-3 font-semibold text-[#472D20]">
-                  {product.name}
+                  <div className="flex items-center gap-2">
+                    {product.name}
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${product.is_active
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-600"
+                      }`}>
+                      {product.is_active ? "Activo" : "Inactivo"}
+                    </span>
+                  </div>
                 </td>
 
                 <td className="px-4 py-3 text-stone-600 max-w-sm truncate">
@@ -188,6 +233,16 @@ export default function InventoryTable() {
                     >
                       Eliminar
                     </button>
+
+                    <button
+                      onClick={() => product.is_active ? setDesactivando(product) : setActivando(product)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${product.is_active
+                        ? "bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
+                        : "bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                        }`}
+                    >
+                      {product.is_active ? "Desactivar" : "Activar"}
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -216,8 +271,31 @@ export default function InventoryTable() {
         confirmText="Eliminar"
         loading={loadingDelete}
         variant="danger"
-        onClose={() => setEliminando(null)}
+        error={errorEliminar}
+        onClose={() => { setEliminando(null); setErrorEliminar(""); }}
         onConfirm={handleConfirmarEliminar}
+      />
+
+      <ConfirmModal
+        isOpen={!!desactivando}
+        title="Desactivar producto"
+        message={`¿Desea desactivar "${desactivando?.name}"? Ya no aparecerá en el catálogo de ventas.`}
+        confirmText="Desactivar"
+        loading={loadingDesactivar}
+        variant="danger"
+        onClose={() => setDesactivando(null)}
+        onConfirm={handleConfirmarDesactivar}
+      />
+
+      <ConfirmModal
+        isOpen={!!activando}
+        title="Activar producto"
+        message={`¿Desea activar "${activando?.name}"? Volverá a aparecer en el catálogo.`}
+        confirmText="Activar"
+        loading={loadingActivar}
+        variant="primary"
+        onClose={() => setActivando(null)}
+        onConfirm={handleConfirmarActivar}
       />
     </>
   );

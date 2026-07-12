@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { deleteProduct, fetchProducts, updateProduct } from "../services/products.service";
+import { activarProduct, deactivateProduct, deleteProduct, fetchAllProducts, updateProduct } from "../services/products.service";
 import { Product } from "../types/product.type";
 
 export function useProducts() {
@@ -12,7 +12,7 @@ export function useProducts() {
     const loadProducts = async () => {
         setLoading(true);
         try {
-            const data = await fetchProducts();
+            const data = await fetchAllProducts();
             setProducts(data);
         } catch (err: any) {
             setError(err.message);
@@ -33,13 +33,13 @@ export function useProducts() {
         category: string;
     }) => {
         try {
-            const formData = new FormData(); 
+            const formData = new FormData();
             formData.append("name", data.name);
             formData.append("description", data.description);
             formData.append("price", String(data.price));
             formData.append("category", data.category);
 
-            await updateProduct(id, formData); 
+            await updateProduct(id, formData);
             await loadProducts();
         } catch (err: any) {
             throw err;
@@ -51,9 +51,27 @@ export function useProducts() {
             await deleteProduct(id);
             setProducts((prev) => prev.filter((p) => p.id !== id));
         } catch (err: any) {
+            throw err;
+        }
+    };
+
+    const handleDeactivate = async (id: string) => {
+        try {
+            await deactivateProduct(id);
+            await loadProducts();
+        } catch (err: any) {
+            throw err;
+        }
+    };
+
+    const handleActivate = async (id: string) => {
+        try {
+            await activarProduct(id);
+            await loadProducts();
+        } catch (err: any) {
             setError(err.message);
         }
     };
 
-    return { products, loading, error, handleUpdate, loadProducts, handleDelete };
+    return { products, loading, error, handleUpdate, loadProducts, handleDelete, handleActivate, handleDeactivate };
 }
