@@ -7,6 +7,8 @@ import productRoutes from "./modules/products/routes/productRoutes";
 import authRoutes from "./modules/auth/routes/auth.routes";
 
 import { supabase } from "./config/supabase";
+import orderRoutes from "./modules/orders/routes/orderRoutes";
+import customerRoutes from "./modules/customers/routes/customerRoutes";
 
 const app = express();
 
@@ -58,5 +60,7 @@ app.use("/api/products", productRoutes);
 // app.use("/api/products", productRoutes)
 app.use("/api/sales", saleRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/customers", customerRoutes)
 
 export default app;
