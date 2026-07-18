@@ -8,6 +8,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import Button from "@/components/ui/Button";
 import CreateOrderModal from "./CreateOrderModal";
 import EditOrderModal from "./EditOrderModal";
+import OrderDetailModal from "./OrderDetailModal";
 
 export function OrdersTable() {
   const { orders, loading, error, loadOrders, handleDelete } = useOrders();
@@ -19,6 +20,8 @@ export function OrdersTable() {
 
   const [modalCrear, setModalCrear] = useState(false);
   const [editando, setEditando] = useState<Order | null>(null);
+  const [detalle, setDetalle] = useState<Order | null>(null);
+
 
   const handleConfirmarEliminar = async () => {
     if (!eliminando) return;
@@ -119,6 +122,12 @@ export function OrdersTable() {
                       >
                         Editar
                       </button>
+                      <button
+                        onClick={() => setDetalle(order)}
+                        className="px-3 py-1.5 text-xs font-semibold bg-[#FBEACE] hover:bg-[#f0d9a8] text-[#472D20] rounded-lg transition-colors border border-[#B8926B]"
+                      >
+                        Ver detalle
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -145,6 +154,13 @@ export function OrdersTable() {
         onClose={() => setEditando(null)}
         onSuccess={loadOrders}
         order={editando}
+      />
+
+      <OrderDetailModal
+        isOpen={!!detalle}
+        onClose={() => setDetalle(null)}
+        onSuccess={loadOrders}
+        order={detalle}
       />
 
     </>

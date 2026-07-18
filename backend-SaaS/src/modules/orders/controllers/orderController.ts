@@ -61,4 +61,18 @@ export class OrderController {
             return res.status(400).json({ success: false, message: error.message });
         }
     }
+
+    static async changeStatus(req: Request, res: Response) {
+        try {
+            const pedido = await OrderService.changeStatus(
+                req.params.id as string,
+                req.body,
+                req.user!.bakeryId,
+                req.user!.userId,
+            );
+            return res.status(200).json({ success: true, data: pedido });
+        } catch (error: any) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+    }
 }

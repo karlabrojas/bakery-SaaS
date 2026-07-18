@@ -59,3 +59,27 @@ export async function deleteOrder(id: string) {
     return json.data;
 }
 
+export async function changeOrderStatus(id: string, status: string, comments?: string) {
+    const res = await fetch(`${api}/api/orders/${id}/status`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ status, comments }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || "Error al cambiar estado");
+    return json.data;
+}
+
+export async function convertOrderToSale(id: string) {
+    const res = await fetch(`${api}/api/orders/${id}/convert-sale`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || "Error al convertir pedido");
+    return json.data;
+}
+

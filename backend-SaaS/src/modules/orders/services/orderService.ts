@@ -1,5 +1,5 @@
 import { supabase } from "../../../config/supabase";
-import { CreateOrderDTO, UpdateOrderDTO } from "../dto/order.dto";
+import { ChangeStatusDTO, CreateOrderDTO, UpdateOrderDTO } from "../dto/order.dto";
 
 export class OrderService {
 
@@ -15,7 +15,7 @@ export class OrderService {
         if (!ultimoPedido) {
             return "PED-0001";
         }
-        
+
         const ultimoNumero = parseInt(ultimoPedido.folio.replace("PED-", ""), 10);
         const nuevoNumero = String(ultimoNumero + 1).padStart(4, "0");
         return `PED-${nuevoNumero}`;
@@ -136,6 +136,10 @@ export class OrderService {
 
         if (errorBusqueda || !pedidoExistente) throw new Error("Pedido no encontrado");
 
+        if (["CANCELLED", "DELIVERED"].includes(pedidoExistente.status)) {
+            throw new Error("No se puede editar un pedido cancelado o entregado");
+        }
+
         let subtotal = pedidoExistente.subtotal;
         let total = pedidoExistente.total;
 
@@ -210,5 +214,35 @@ export class OrderService {
 
         if (error) throw error;
         return { message: "Pedido eliminado correctamente" };
+    }
+
+    static async changeStatus(
+        idPedido: string,
+        datosDTO: ChangeStatusDTO,
+        idPanaderia: string,
+        idUsuario: string,
+    ) {
+        const { data: pedidoExistente, error: errorBusqueda } = await supabase
+            .from("orders")
+            .select("status")
+            .eq("id", idPedido)
+            .eq("bakery_id", idPanaderia)
+            .single();
+
+        if (errorBusqueda || !pedidoExistente) throw new Error("Pedido no encontrado");
+
+        if (pedidoExistente.status === "CANCELLED") {
+            throw new Error("No se puede cambiar el estado de un pedido cancelado");
+        }
+
+        const { data: pedidoActualizado, error } = await supabase
+            .from("orders")
+            .update({ status: datosDTO.status, updated_at: new Date().toISOString() })
+            .eq("id", idPedido)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return pedidoActualizado;
     }
 }
