@@ -123,6 +123,14 @@ export class OrderService {
 
         if (errorItems) throw errorItems;
 
+        await supabase.from("order_status_history").insert({
+            order_id: pedido.id,
+            previous_status: null,
+            current_status: "PENDING",
+            changed_by: idUsuario,
+            comments: "Pedido creado",
+        });
+
         return pedido;
     }
 
@@ -243,6 +251,87 @@ export class OrderService {
             .single();
 
         if (error) throw error;
+
+        await supabase.from("order_status_history").insert({
+            order_id: idPedido,
+            previous_status: pedidoExistente.status,
+            current_status: datosDTO.status,
+            changed_by: idUsuario,
+            comments: datosDTO.comments ?? null,
+        });
+
         return pedidoActualizado;
     }
+
+    static async getHistory(idPedido: string, idPanaderia: string) {
+        const { data: pedido, error: errorBusqueda } = await supabase
+            .from("orders")
+            .select("id")
+            .eq("id", idPedido)
+            .eq("bakery_id", idPanaderia)
+            .single();
+
+        if (errorBusqueda || !pedido) throw new Error("Pedido no encontrado");
+
+        const { data: datos, error } = await supabase
+            .from("order_status_history")
+            .select("*")
+            .eq("order_id", idPedido)
+            .order("changed_at", { ascending: false });
+
+        if (error) throw error;
+        return datos;
+    }
+
+    static async convertToSale(
+        idPedido: string,
+        idPanaderia: string,
+        idUsuario: string,
+    ) {
+        const { data: pedido, error: errorBusqueda } = await supabase
+            .from("orders")
+            .select(`*, order_items(*)`)
+            .eq("id", idPedido)
+            .eq("bakery_id", idPanaderia)
+            .single();
+
+        if (errorBusqueda || !pedido) throw new Error("Pedido no encontrado");
+
+        if (pedido.status !== "READY") {
+            throw new Error("Solo se pueden convertir pedidos en estado READY");
+        }
+
+        const { data: venta, error: errorVenta } = await supabase
+            .from("sales")
+            .insert({
+                bakery_id: idPanaderia,
+                customer_id: pedido.customer_id ?? null,
+                total_amount: pedido.total,
+                payment_method: "cash",
+            })
+            .select()
+            .single();
+
+        if (errorVenta) throw errorVenta;
+
+        const itemsVenta = pedido.order_items.map((item: any) => ({
+            sale_id: venta.id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            subtotal: item.subtotal,
+        }));
+
+        await supabase.from("sale_items").insert(itemsVenta);
+
+        await this.changeStatus(
+            idPedido,
+            { status: "DELIVERED", comments: "Convertido a venta" },
+            idPanaderia,
+            idUsuario,
+        );
+
+        return venta;
+    }
+
 }

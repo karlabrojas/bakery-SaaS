@@ -11,7 +11,7 @@ import EditOrderModal from "./EditOrderModal";
 import OrderDetailModal from "./OrderDetailModal";
 
 export function OrdersTable() {
-  const { orders, loading, error, loadOrders, handleDelete } = useOrders();
+  const { orders, loading, error, loadOrders, handleDelete, handleConvertToSale } = useOrders();
 
   const [eliminando, setEliminando] = useState<Order | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -21,7 +21,8 @@ export function OrdersTable() {
   const [modalCrear, setModalCrear] = useState(false);
   const [editando, setEditando] = useState<Order | null>(null);
   const [detalle, setDetalle] = useState<Order | null>(null);
-
+  const [convirtiendo, setConvirtiendo] = useState<Order | null>(null);
+  const [loadingConvertir, setLoadingConvertir] = useState(false);
 
   const handleConfirmarEliminar = async () => {
     if (!eliminando) return;
@@ -37,6 +38,17 @@ export function OrdersTable() {
     }
   };
 
+  const handleConfirmarConvertir = async () => {
+    if (!convirtiendo) return;
+    setLoadingConvertir(true);
+    try {
+      await handleConvertToSale(convirtiendo.id);
+      setConvirtiendo(null);
+      loadOrders();
+    } finally {
+      setLoadingConvertir(false);
+    }
+  };
 
   if (loading) return (
     <div className="py-12 flex flex-col items-center justify-center space-y-3">
@@ -103,6 +115,7 @@ export function OrdersTable() {
                     <div className="flex items-center gap-2">
                       {order.status === "READY" && (
                         <button
+                          onClick={() => setConvirtiendo(order)}
                           className="px-3 py-1.5 text-xs font-semibold bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors border border-green-200"
                         >
                           Convertir a venta
@@ -163,6 +176,16 @@ export function OrdersTable() {
         order={detalle}
       />
 
+      <ConfirmModal
+        isOpen={!!convirtiendo}
+        title="Convertir a venta"
+        message={`¿Desea convertir el pedido "${convirtiendo?.folio}" a venta?`}
+        confirmText="Convertir"
+        loading={loadingConvertir}
+        variant="primary"
+        onClose={() => setConvirtiendo(null)}
+        onConfirm={handleConfirmarConvertir}
+      />
     </>
   );
 }

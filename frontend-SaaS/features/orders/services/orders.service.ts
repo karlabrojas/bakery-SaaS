@@ -83,3 +83,11 @@ export async function convertOrderToSale(id: string) {
     return json.data;
 }
 
+export async function fetchOrderHistory(id: string) {
+    const res = await fetch(`${api}/api/orders/${id}/history`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    if (!res.ok) throw new Error("Error al obtener historial");
+    const json = await res.json();
+    return json.data;
+}

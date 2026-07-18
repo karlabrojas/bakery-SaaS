@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchOrders, deleteOrder} from "../services/orders.service";
+import { fetchOrders, deleteOrder, convertOrderToSale } from "../services/orders.service";
 import { Order } from "../types/order.type";
 
 export function useOrders() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [convirtiendo, setConvirtiendo] = useState<Order | null>(null);
+    const [loadingConvert, setLoadingConvert] = useState(false);
 
     const loadOrders = async () => {
         setLoading(true);
@@ -34,6 +36,14 @@ export function useOrders() {
         }
     };
 
+    const handleConvertToSale = async (id: string) => {
+        try {
+            await convertOrderToSale(id);
+            await loadOrders();
+        } catch (err: any) {
+            throw err;
+        }
+    };
 
-    return { orders, loading, error, loadOrders, handleDelete };
+    return { orders, loading, error, loadOrders, handleDelete, handleConvertToSale };
 }
