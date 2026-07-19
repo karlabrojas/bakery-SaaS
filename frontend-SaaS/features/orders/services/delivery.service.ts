@@ -1,83 +1,99 @@
+import { Delivery } from "../types/delivery.type";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function createDelivery(orderId: string, data: any) {
-  const response = await fetch(`${API_URL}/orders/${orderId}/delivery`, {
+const getToken = () => localStorage.getItem("accessToken");
+
+export async function createDelivery(
+  orderId: string,
+  data: Partial<Delivery>,
+): Promise<Delivery> {
+  const response = await fetch(`${API_URL}/api/orders/${orderId}/delivery`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
     },
-    credentials: "include",
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) throw new Error("Error creando entrega");
-
-  return response.json();
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.message || "Error creando entrega");
+  return json.data;
 }
 
-export async function getDelivery(orderId: string) {
-  const response = await fetch(`${API_URL}/orders/${orderId}/delivery`, {
-    credentials: "include",
+export async function getDelivery(orderId: string): Promise<Delivery> {
+  const response = await fetch(`${API_URL}/api/orders/${orderId}/delivery`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
   });
 
-  if (!response.ok) throw new Error("Error obteniendo entrega");
-
-  return response.json();
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.message || "Error obteniendo entrega");
+  return json.data;
 }
 
-export async function updateDelivery(orderId: string, data: any) {
-  const response = await fetch(`${API_URL}/orders/${orderId}/delivery`, {
+export async function updateDelivery(
+  orderId: string,
+  data: Partial<Delivery>,
+): Promise<Delivery> {
+  const response = await fetch(`${API_URL}/api/orders/${orderId}/delivery`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
     },
-    credentials: "include",
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) throw new Error("Error actualizando entrega");
-
-  return response.json();
+  const json = await response.json();
+  if (!response.ok)
+    throw new Error(json.message || "Error actualizando entrega");
+  return json.data;
 }
 
-export async function changeDeliveryStatus(orderId: string, status: string) {
-  const response = await fetch(`${API_URL}/orders/${orderId}/delivery/status`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({
-      status,
-    }),
-  });
-
-  if (!response.ok) throw new Error("Error cambiando estado");
-
-  return response.json();
-}
-
-export async function completeDelivery(orderId: string) {
+export async function changeDeliveryStatus(
+  orderId: string,
+  status: string,
+): Promise<Delivery> {
   const response = await fetch(
-    `${API_URL}/orders/${orderId}/delivery/complete`,
+    `${API_URL}/api/orders/${orderId}/delivery/status`,
     {
       method: "PATCH",
-      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify({ status }),
     },
   );
 
-  if (!response.ok) throw new Error("Error completando entrega");
-
-  return response.json();
+  const json = await response.json();
+  if (!response.ok)
+    throw new Error(json.message || "Error cambiando estado de entrega");
+  return json.data;
 }
 
-export async function deleteDelivery(orderId: string) {
-  const response = await fetch(`${API_URL}/orders/${orderId}/delivery`, {
+export async function completeDelivery(orderId: string): Promise<Delivery> {
+  const response = await fetch(
+    `${API_URL}/api/orders/${orderId}/delivery/complete`,
+    {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${getToken()}` },
+    },
+  );
+
+  const json = await response.json();
+  if (!response.ok)
+    throw new Error(json.message || "Error completando entrega");
+  return json.data;
+}
+
+export async function deleteDelivery(orderId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/api/orders/${orderId}/delivery`, {
     method: "DELETE",
-    credentials: "include",
+    headers: { Authorization: `Bearer ${getToken()}` },
   });
 
-  if (!response.ok) throw new Error("Error eliminando entrega");
-
-  return response.json();
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.message || "Error eliminando entrega");
 }

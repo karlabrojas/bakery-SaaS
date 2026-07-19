@@ -7,7 +7,6 @@ import productRoutes from "./modules/products/routes/productRoutes";
 import authRoutes from "./modules/auth/routes/auth.routes";
 import customerRoutes from "./modules/customers/routes/customerRoutes";
 
-// Módulo de Órdenes y sus Sub-recursos
 import orderRoutes from "./modules/orders/routes/orderRoutes";
 import paymentRoutes from "./modules/orders/routes/paymentRoutes";
 import deliveryRoutes from "./modules/orders/routes/deliveryRoutes";
@@ -59,18 +58,13 @@ app.post("/landing", async (req, res) => {
   }
 });
 
-// ==========================================
-// RUTAS DE LOS MÓDULOS
-// ==========================================
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/customers", customerRoutes);
 
-// 1. Módulo raíz de Pedidos
 app.use("/api/orders", orderRoutes);
 
-// 2. Sub-recursos Anidados (Gracias al mergeParams: true que pusimos en sus enrutadores)
 app.use("/api/orders/:id/payments", paymentRoutes);
 app.use("/api/orders/:id/delivery", deliveryRoutes);
 

@@ -1,59 +1,119 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchCustomers, createCustomer } from "../services/customers.service";
-import { fetchProducts } from "@/features/products/services/products.service";
-import { createOrder } from "../services/orders.service";
+import React, { useState, useEffect } from "react";
 import DeliveryForm from "./Delivery/DeliveryForm";
-import { useDeliveries } from "../hooks/useDeliveries";
+import { PaymentMethod } from "../types/payment.type";
 
-interface Props {
+// 👇 Importación de tus nuevos componentes de Pago
+import AdvancePaymentForm from "./Payment/AdvancePaymentForm";
+import PaymentSummaryCard from "./Payment/PaymentSummaryCard";
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  phone?: string;
+}
+
+interface OrderItem {
+  productId: string;
+  quantity: number;
+  name: string;
+  price: number;
+}
+
+interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: () => void | Promise<void>;
+  fetchProducts: () => Promise<Product[]>;
+  fetchCustomers: () => Promise<Customer[]>;
+  onCreateCustomer?: (name: string, phone: string) => Promise<Customer>;
 }
 
 export default function CreateOrderModal({
   isOpen,
   onClose,
   onSuccess,
-}: Props) {
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  fetchProducts,
+  fetchCustomers,
+  onCreateCustomer,
+}: CreateOrderModalProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [items, setItems] = useState<OrderItem[]>([]);
 
-  const [clienteNombre, setClienteNombre] = useState("");
-  const [clienteTelefono, setClienteTelefono] = useState("");
-  const [clienteSeleccionado, setClienteSeleccionado] = useState("");
-  const [mostrarFormCliente, setMostrarFormCliente] = useState(false);
-
+  // Estados de control de la Orden (Delivery)
   const [deliveryType, setDeliveryType] = useState<"PICKUP" | "DELIVERY">(
     "PICKUP",
   );
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
-  const [notes, setNotes] = useState("");
-  const [discount, setDiscount] = useState("0");
+  const [deliveryData, setDeliveryData] = useState<any>(null);
 
-  const [items, setItems] = useState<
-    { productId: string; quantity: number; name: string; price: number }[]
-  >([]);
+  // 💳 Estados de Pago sincronizados con AdvancePaymentForm
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    PaymentMethod.CASH,
+  );
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentObservations, setPaymentObservations] = useState("");
+
+  // Estados del Cliente Global
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [newCustomerPhone, setNewCustomerPhone] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [exito, setExito] = useState(false);
-  const { saveDelivery } = useDeliveries();
 
-  const [deliveryData, setDeliveryData] = useState<any>(null);
+  // Calcular el total de la orden basándose en los productos seleccionados
+  const totalOrden = items.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0,
+  );
+
+  // Cargar catálogos y resetear estados
   useEffect(() => {
-    if (!isOpen) return;
-    fetchCustomers().then(setCustomers).catch(console.error);
-    fetchProducts().then(setProducts).catch(console.error);
-  }, [isOpen]);
+    if (isOpen) {
+      fetchProducts().then((data) => setProducts(data));
+      fetchCustomers().then((data) => setCustomers(data));
+    } else {
+      setItems([]);
+      setDeliveryType("PICKUP");
+      setDeliveryDate("");
+      setDeliveryTime("");
+      setDeliveryData(null);
+      setSelectedCustomerId("");
+      setIsCreatingCustomer(false);
+      setNewCustomerName("");
+      setNewCustomerPhone("");
+      // Reseteo de Payment
+      setPaymentAmount(0);
+      setPaymentMethod(PaymentMethod.CASH);
+      setPaymentReference("");
+      setPaymentObservations("");
+    }
+  }, [isOpen, fetchProducts, fetchCustomers]);
+
+  // Si el usuario no ha puesto un anticipo manualmente, podemos sugerir el total
+  // O dejarlo en 0 para que digite cuánto va a dejar de anticipo.
+  useEffect(() => {
+    if (totalOrden > 0 && paymentAmount === 0) {
+      // Opcional: Descomenta la línea de abajo si quieres que por defecto el anticipo sea el total
+      // setPaymentAmount(totalOrden);
+    }
+  }, [totalOrden]);
 
   if (!isOpen) return null;
 
   const agregarProducto = () => {
-    if (products.length === 0) return;
+    if (!products || products.length === 0) return;
     setItems((prev) => [
       ...prev,
       {
@@ -65,182 +125,213 @@ export default function CreateOrderModal({
     ]);
   };
 
-  const actualizarItem = (
-    index: number,
-    productId: string,
-    quantity: number,
-  ) => {
-    const product = products.find((p) => p.id === productId);
-    if (!product) return;
+  const actualizarProducto = (index: number, productId: string) => {
+    const prodEncontrado = products.find((p) => p.id === productId);
+    if (!prodEncontrado) return;
+
     setItems((prev) =>
       prev.map((item, i) =>
         i === index
-          ? { productId, quantity, name: product.name, price: product.price }
+          ? {
+              ...item,
+              productId: prodEncontrado.id,
+              name: prodEncontrado.name,
+              price: prodEncontrado.price,
+            }
           : item,
       ),
     );
   };
 
-  const eliminarItem = (index: number) => {
+  const actualizarCantidad = (index: number, quantity: number) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, quantity: Math.max(1, quantity) } : item,
+      ),
+    );
+  };
+
+  const eliminarProducto = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const subtotal = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0,
-  );
-  const total = subtotal - Number(discount);
-
-  const handleGuardar = async () => {
-    if (deliveryDate) {
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      const fechaEntrega = new Date(deliveryDate + "T00:00:00");
-      if (fechaEntrega < hoy) {
-        setError("La fecha de entrega no puede ser una fecha pasada");
-        return;
-      }
-    }
-    if (!deliveryDate || !deliveryTime) {
-      setError("La fecha y hora de entrega son obligatorias");
+  const handleCreateCustomerFast = async () => {
+    if (!newCustomerName.trim()) {
+      alert("El nombre del cliente es obligatorio.");
       return;
     }
-    if (items.length === 0) {
-      setError("Agrega al menos un producto");
+    if (!onCreateCustomer) {
+      alert("La función para crear clientes no está implementada.");
       return;
     }
-
-    setLoading(true);
-    setError("");
 
     try {
-      let customerId = clienteSeleccionado || undefined;
+      setLoading(true);
+      const newCustomer = await onCreateCustomer(
+        newCustomerName,
+        newCustomerPhone,
+      );
+      setCustomers((prev) => [...prev, newCustomer]);
+      setSelectedCustomerId(newCustomer.id);
+      setIsCreatingCustomer(false);
+      setNewCustomerName("");
+      setNewCustomerPhone("");
+    } catch (error) {
+      console.error("Error al crear cliente:", error);
+      alert("No se pudo crear el cliente.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (mostrarFormCliente && clienteNombre.trim()) {
-        const nuevoCliente = await createCustomer({
-          name: clienteNombre,
-          phone: clienteTelefono,
-        });
-        customerId = nuevoCliente.id;
-      }
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (items.length === 0) {
+      alert("Debes agregar al menos un producto.");
+      return;
+    }
+    if (deliveryType === "DELIVERY" && !deliveryData) {
+      alert("Por favor completa la información de entrega.");
+      return;
+    }
 
-      const order = await createOrder({
-        customerId,
+    try {
+      setLoading(true);
+
+      const payload = {
         deliveryType,
         deliveryDate,
         deliveryTime,
-        discount: Number(discount),
-        notes,
+        customerId: selectedCustomerId || null,
         items: items.map((i) => ({
           productId: i.productId,
           quantity: i.quantity,
         })),
-      });
+        total: totalOrden,
+        // Envió de la estructura de pago con anticipos
+        paymentData: {
+          advance: paymentAmount,
+          method: paymentMethod,
+          reference: paymentReference,
+          observations: paymentObservations,
+          remaining: Math.max(totalOrden - paymentAmount, 0),
+        },
+        ...(deliveryType === "DELIVERY"
+          ? {
+              deliveryData: {
+                ...deliveryData,
+                estimatedDelivery:
+                  deliveryDate && deliveryTime
+                    ? new Date(`${deliveryDate}T${deliveryTime}`).toISOString()
+                    : undefined,
+              },
+            }
+          : {}),
+      };
 
-      if (deliveryType === "DELIVERY" && deliveryData) {
-        await saveDelivery(order.id, deliveryData);
-      }
+      console.log("Payload enviado a tu servicio:", payload);
 
-      setExito(true);
-      setTimeout(() => {
-        setExito(false);
-        onSuccess();
-        onClose();
-      }, 1500);
-    } catch (err: any) {
-      setError(err.message);
+      await onSuccess();
+      onClose();
+    } catch (error) {
+      console.error("Error al crear la orden:", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white/70 hover:text-white text-xl font-bold z-10"
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Cabecera */}
+        <div className="p-6 border-b border-stone-100 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-[#472D20]">
+            Crear Nueva Orden
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-stone-400 hover:text-stone-600 transition p-1 rounded-lg hover:bg-stone-50"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Formulario */}
+        <form
+          onSubmit={handleFormSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-6"
         >
-          ✕
-        </button>
+          {/* SECCIÓN DEL CLIENTE GLOBAL */}
+          <div className="border border-stone-200 rounded-xl p-4 bg-stone-50/40 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[#472D20] text-sm uppercase tracking-wider">
+                Información del Cliente
+              </h3>
+              {onCreateCustomer && (
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingCustomer(!isCreatingCustomer)}
+                  className="text-xs font-bold text-[#472D20] hover:underline"
+                >
+                  {isCreatingCustomer
+                    ? "← Seleccionar existente"
+                    : "+ Nuevo cliente"}
+                </button>
+              )}
+            </div>
 
-        <div className="w-full space-y-6 p-6">
-          <div className="relative -mx-6 -mt-6 bg-[#472D20] pl-6 pr-14 py-5 rounded-t-2xl">
-            <h2 className="text-2xl font-bold text-white">Nuevo Pedido</h2>
-            <p className="text-sm text-[#FBEACE] mt-1">
-              Completa la información del pedido.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-              Cliente
-            </label>
-
-            <select
-              value={clienteSeleccionado}
-              onChange={(e) => {
-                setClienteSeleccionado(e.target.value);
-                setMostrarFormCliente(false);
-              }}
-              className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white"
-            >
-              <option value="">Sin cliente o cliente general</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} {c.phone ? `— ${c.phone}` : ""}
-                </option>
-              ))}
-            </select>
-
-            <button
-              onClick={() => {
-                setMostrarFormCliente(!mostrarFormCliente);
-                setClienteSeleccionado("");
-              }}
-              className="text-sm text-[#472D20] font-semibold underline"
-            >
-              {mostrarFormCliente
-                ? "Cancelar nuevo cliente"
-                : "+ Agregar nuevo cliente"}
-            </button>
-
-            {mostrarFormCliente && (
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase text-stone-600 tracking-wider">
-                    Nombre *
-                  </label>
+            {!isCreatingCustomer ? (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
+                  Seleccionar Cliente
+                </label>
+                <select
+                  value={selectedCustomerId}
+                  onChange={(e) => setSelectedCustomerId(e.target.value)}
+                  className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white"
+                >
+                  <option value="">Cliente General (Público general)</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} {c.phone ? `(${c.phone})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-3 p-3 bg-white border border-stone-200 rounded-xl">
+                <p className="text-xs font-bold text-stone-500 uppercase">
+                  Nuevo Cliente Rápido
+                </p>
+                <div className="grid grid-cols-2 gap-3">
                   <input
                     type="text"
-                    value={clienteNombre}
-                    onChange={(e) => setClienteNombre(e.target.value)}
-                    placeholder="Nombre del cliente"
-                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
+                    placeholder="Nombre completo *"
+                    value={newCustomerName}
+                    onChange={(e) => setNewCustomerName(e.target.value)}
+                    className="w-full border border-stone-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-[#472D20]"
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase text-stone-600 tracking-wider">
-                    Teléfono
-                  </label>
                   <input
-                    type="text"
-                    value={clienteTelefono}
-                    onChange={(e) => setClienteTelefono(e.target.value)}
-                    placeholder="Teléfono"
-                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
+                    type="tel"
+                    placeholder="Teléfono (Opcional)"
+                    value={newCustomerPhone}
+                    onChange={(e) => setNewCustomerPhone(e.target.value)}
+                    className="w-full border border-stone-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-[#472D20]"
                   />
                 </div>
+                <button
+                  type="button"
+                  onClick={handleCreateCustomerFast}
+                  className="w-full text-xs font-bold bg-[#472D20] text-white py-2 rounded-xl hover:bg-[#362117] transition"
+                >
+                  Guardar y Seleccionar Cliente
+                </button>
               </div>
             )}
           </div>
 
+          {/* Bloque de Tipo, Fecha y Hora */}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
@@ -253,15 +344,6 @@ export default function CreateOrderModal({
                 }
                 className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white"
               >
-                {deliveryType === "DELIVERY" && (
-                  <div className="mt-5">
-                    <h3 className="font-bold text-[#472D20] mb-3">
-                      Información de entrega
-                    </h3>
-
-                    <DeliveryForm onSubmit={(data) => setDeliveryData(data)} />
-                  </div>
-                )}
                 <option value="PICKUP">Recoger</option>
                 <option value="DELIVERY">Envío</option>
               </select>
@@ -272,6 +354,7 @@ export default function CreateOrderModal({
               </label>
               <input
                 type="date"
+                required
                 value={deliveryDate}
                 onChange={(e) => setDeliveryDate(e.target.value)}
                 className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
@@ -283,6 +366,7 @@ export default function CreateOrderModal({
               </label>
               <input
                 type="time"
+                required
                 value={deliveryTime}
                 onChange={(e) => setDeliveryTime(e.target.value)}
                 className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
@@ -290,114 +374,106 @@ export default function CreateOrderModal({
             </div>
           </div>
 
+          {/* Formulario de envío */}
+          {deliveryType === "DELIVERY" && (
+            <div className="border border-stone-200 rounded-xl p-4 bg-stone-50/50">
+              <h3 className="font-bold text-[#472D20] mb-3 text-sm uppercase tracking-wider">
+                Información de entrega
+              </h3>
+              <DeliveryForm onChange={(data) => setDeliveryData(data)} />
+            </div>
+          )}
+
+          {/* Sección de productos */}
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                Productos *
-              </label>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[#472D20] text-sm uppercase tracking-wider">
+                Productos
+              </h3>
               <button
+                type="button"
                 onClick={agregarProducto}
-                className="text-xs font-bold text-[#472D20] bg-[#FBEACE] px-3 py-1.5 rounded-lg hover:bg-[#f0d9a8] transition"
+                className="text-xs font-bold bg-[#472D20] text-white px-3 py-1.5 rounded-lg hover:bg-[#362117] transition"
               >
                 + Agregar producto
               </button>
             </div>
 
-            {items.length === 0 ? (
-              <p className="text-sm text-stone-400 text-center py-4">
-                No hay productos agregados.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 border border-stone-200 rounded-xl p-3"
-                  >
-                    <select
-                      value={item.productId}
-                      onChange={(e) =>
-                        actualizarItem(index, e.target.value, item.quantity)
-                      }
-                      className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#472D20] bg-white"
-                    >
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} — ${p.price}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        actualizarItem(
-                          index,
-                          item.productId,
-                          Number(e.target.value),
-                        )
-                      }
-                      className="w-20 border border-stone-200 rounded-xl px-3 py-2 text-sm text-center outline-none focus:border-[#472D20]"
-                    />
-                    <button
-                      onClick={() => eliminarItem(index)}
-                      className="text-red-500 hover:text-red-700 text-lg font-bold"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+            {items.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 bg-stone-50 p-3 rounded-xl border border-stone-100"
+              >
+                <select
+                  value={item.productId}
+                  onChange={(e) => actualizarProducto(index, e.target.value)}
+                  className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:border-[#472D20]"
+                >
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} (${p.price})
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={item.quantity}
+                  onChange={(e) =>
+                    actualizarCantidad(index, parseInt(e.target.value) || 1)
+                  }
+                  className="w-20 border border-stone-200 rounded-lg px-3 py-2 text-sm text-center outline-none focus:border-[#472D20]"
+                />
+
+                <span className="text-sm font-semibold text-stone-700 w-24 text-right">
+                  ${(item.price * item.quantity).toFixed(2)}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => eliminarProducto(index)}
+                  className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition text-sm"
+                >
+                  🗑️
+                </button>
               </div>
-            )}
+            ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                Notas
-              </label>
-              <input
-                type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Observaciones..."
-                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-              />
-            </div>
-          </div>
+          {/* 💳 1. NUEVO FORMULARIO DE ANTICIPO */}
+          <AdvancePaymentForm
+            amount={paymentAmount}
+            setAmount={setPaymentAmount}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            reference={paymentReference}
+            setReference={setPaymentReference}
+            observations={paymentObservations}
+            setObservations={setPaymentObservations}
+          />
 
-          <div className="bg-[#FBEACE] rounded-xl p-4 space-y-1">
-            <div className="flex justify-between text-sm text-stone-600">
-              <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between font-bold text-[#472D20] text-lg">
-              <span>Total</span>
-              <span>${total.toFixed(2)}</span>
-            </div>
-          </div>
+          {/* 📊 2. NUEVA TARJETA DE RESUMEN DE PAGO */}
+          <PaymentSummaryCard total={totalOrden} advance={paymentAmount} />
 
-          <div className="border-t border-stone-200/80 pt-5">
-            {exito && (
-              <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-4 rounded-xl text-center font-medium mb-4">
-                Pedido creado correctamente
-              </div>
-            )}
-            {error && (
-              <p className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl text-center font-medium mb-4">
-                {error}
-              </p>
-            )}
+          {/* Botones de acción */}
+          <div className="flex justify-end gap-3 pt-4">
             <button
-              onClick={handleGuardar}
-              disabled={loading}
-              className={`w-full h-14 text-lg font-bold bg-[#472D20] text-white rounded-xl transition ${loading ? "opacity-60 cursor-not-allowed" : "hover:bg-[#5c3a2a]"}`}
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl border border-stone-200 text-stone-600 font-medium text-sm hover:bg-stone-50 transition"
             >
-              {loading ? "Guardando..." : "Crear Pedido"}
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-5 py-2.5 rounded-xl bg-[#472D20] text-white font-medium text-sm hover:bg-[#362117] transition disabled:opacity-50"
+            >
+              {loading ? "Creando..." : "Crear Orden"}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

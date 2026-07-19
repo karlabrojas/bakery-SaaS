@@ -7,20 +7,17 @@ export type DeliveryStatus =
 
 export interface Delivery {
   id: string;
-
   order_id: string;
-
+  bakery_id: string; // Añadido para el control multi-tenant
+  delivery_type: "PICKUP" | "DELIVERY";
   address: string;
-
-  reference?: string;
-
+  recipient_name: string;
+  recipient_phone: string;
+  estimated_delivery?: string; // Timestamptz
+  delivery_at?: string; // Timestamptz
   status: DeliveryStatus;
-
-  delivery_date: string;
-
-  delivery_time: string;
-
   notes?: string;
-
+  completed_by?: string; // ID del repartidor que entregó
   created_at: string;
+  updated_at?: string;
 }
