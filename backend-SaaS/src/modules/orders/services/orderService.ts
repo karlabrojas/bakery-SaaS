@@ -90,7 +90,7 @@ export class OrderService {
   static async getAll(idPanaderia: string) {
     const { data: datos, error } = await supabase
       .from("orders")
-      .select("*, order_items(*)") // Optimizado para traer los items de un solo golpe
+      .select("*, order_items(*)")
       .eq("bakery_id", idPanaderia)
       .order("created_at", { ascending: false });
 
@@ -162,6 +162,8 @@ export class OrderService {
         total,
         notes: datosDTO.notes ?? null,
         created_by: idUsuario,
+        payment_status: PaymentStatus.PENDING,
+        remaining_balance: total,
       })
       .select()
       .single();
@@ -174,15 +176,38 @@ export class OrderService {
       .insert(itemsPedido);
     if (errorItems) throw errorItems;
 
+    if (datosDTO.initialAdvance && datosDTO.initialAdvance.amount > 0) {
+      if (datosDTO.initialAdvance.amount > total) {
+        throw new Error(
+          "El anticipo no puede ser mayor que el total del pedido",
+        );
+      }
+
+      const { error: errorAnticipo } = await supabase
+        .from("advance_payments")
+        .insert({
+          order_id: pedido.id,
+          bakery_id: idPanaderia,
+          amount: datosDTO.initialAdvance.amount,
+          payment_method: datosDTO.initialAdvance.paymentMethod,
+          reference: datosDTO.initialAdvance.reference ?? null,
+          created_by: idUsuario,
+        });
+
+      if (errorAnticipo) throw errorAnticipo;
+
+      await this.updatePaymentStatus(pedido.id, idPanaderia);
+    }
+
     await supabase.from("order_status_history").insert({
       order_id: pedido.id,
       previous_status: null,
       current_status: OrderStatus.PENDING,
       changed_by: idUsuario,
-      comments: "Pedido creado",
+      comments: "Pedido creado correctamente",
     });
 
-    return pedido;
+    return await this.getById(pedido.id, idPanaderia);
   }
 
   static async update(
@@ -207,7 +232,8 @@ export class OrderService {
       const { data: productos } = await supabase
         .from("products")
         .select("id, price")
-        .in("id", idsProductos);
+        .in("id", idsProductos)
+        .eq("bakery_id", idPanaderia);
 
       subtotal = 0;
       const nuevosItems = datosDTO.items.map((item) => {
@@ -330,7 +356,7 @@ export class OrderService {
       .insert({
         bakery_id: idPanaderia,
         customer_id: pedido.customer_id ?? null,
-        total_amount: pedido.total,
+        total_amount: Math.round(Number(pedido.total)), // Forzado a entero por tipo bigint en la BD
         payment_method: "cash",
       })
       .select()
@@ -342,15 +368,22 @@ export class OrderService {
       sale_id: venta.id,
       product_id: item.product_id,
       quantity: item.quantity,
-      unit_price: item.unit_price,
-      subtotal: item.subtotal,
+      price: Number(item.unit_price),
+      subtotal: Number(item.subtotal),
     }));
 
-    await supabase.from("sale_items").insert(itemsVenta);
+    const { error: errorItems } = await supabase
+      .from("sale_items")
+      .insert(itemsVenta);
+
+    if (errorItems) throw errorItems;
 
     await this.changeStatus(
       idPedido,
-      { status: OrderStatus.DELIVERED, comments: "Convertido a venta" },
+      {
+        status: OrderStatus.DELIVERED,
+        comments: "Convertido a venta automáticamente",
+      },
       idPanaderia,
       idUsuario,
     );

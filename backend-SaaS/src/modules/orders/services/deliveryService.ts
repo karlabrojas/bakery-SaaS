@@ -63,6 +63,7 @@ export class DeliveryService {
       .from("deliveries")
       .insert({
         order_id: idPedido,
+        bakery_id: idPanaderia,
         delivery_type: datos.deliveryType,
         address: datos.address ?? null,
         recipient_name: datos.recipientName ?? null,
@@ -107,7 +108,7 @@ export class DeliveryService {
         recipient_phone: datos.recipientPhone ?? null,
         estimated_delivery: datos.estimatedDelivery ?? null,
         notes: datos.notes ?? null,
-        updated_at: new Date().toISOString(),
+        update_at: new Date().toISOString(),
       })
       .eq("order_id", idPedido)
       .select()
@@ -127,7 +128,7 @@ export class DeliveryService {
 
     const { data, error } = await supabase
       .from("deliveries")
-      .update({ status: nuevoEstado, updated_at: new Date().toISOString() })
+      .update({ status: nuevoEstado, update_at: new Date().toISOString() })
       .eq("order_id", idPedido)
       .select()
       .single();
@@ -151,8 +152,8 @@ export class DeliveryService {
       .from("deliveries")
       .update({
         status: DeliveryStatus.DELIVERED,
-        delivered_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        delivery_at: new Date().toISOString(),
+        update_at: new Date().toISOString(),
       })
       .eq("order_id", idPedido);
 

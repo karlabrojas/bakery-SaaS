@@ -7,6 +7,7 @@ export class PaymentService {
     idPedido: string,
     datos: RegisterAdvancePaymentDTO,
     idPanaderia: string,
+    idUsuario?: string,
   ) {
     await OrderService.getOrder(idPedido, idPanaderia);
     const resumen = await OrderService.calculatePaymentSummary(
@@ -22,9 +23,11 @@ export class PaymentService {
       .from("advance_payments")
       .insert({
         order_id: idPedido,
+        bakery_id: idPanaderia,
         amount: datos.amount,
         payment_method: datos.paymentMethod,
         reference: datos.reference ?? null,
+        created_by: idUsuario ?? null,
       })
       .select()
       .single();
@@ -57,6 +60,7 @@ export class PaymentService {
     idPedido: string,
     datos: FinalPaymentDTO,
     idPanaderia: string,
+    idUsuario?: string,
   ) {
     await OrderService.getOrder(idPedido, idPanaderia);
     const resumen = await OrderService.calculatePaymentSummary(
@@ -71,9 +75,11 @@ export class PaymentService {
 
     const { error } = await supabase.from("advance_payments").insert({
       order_id: idPedido,
+      bakery_id: idPanaderia,
       amount: datos.amount,
       payment_method: datos.paymentMethod,
       reference: datos.reference ?? null,
+      created_by: idUsuario ?? null,
     });
 
     if (error) throw error;
