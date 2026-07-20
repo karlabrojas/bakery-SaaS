@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { authService } from "@/features/auth/services/auth.service"; // 👈 Import
 
 interface SidebarProps {
   isOpen: boolean;
@@ -17,28 +18,25 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+
   const menuItems = [
-    {
-      name: "Ventas",
-      href: "/sales",
-      icon: ShoppingCart,
-    },
-    {
-      name: "Productos",
-      href: "/products",
-      icon: Croissant,
-    },
-    {
-      name: "Inventario",
-      href: "/inventory",
-      icon: Package,
-    },
-    {
-      name: "Pedidos",
-      href: "/orders",
-      icon: ClipboardList,
-    },
+    { name: "Ventas", href: "/sales", icon: ShoppingCart },
+    { name: "Productos", href: "/products", icon: Croissant },
+    { name: "Inventario", href: "/inventory", icon: Package },
+    { name: "Pedidos", href: "/orders", icon: ClipboardList },
   ];
+
+  const handleLogout = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken") || "";
+      await authService.logout(accessToken);
+      localStorage.removeItem("accessToken");
+      window.location.href = "/";
+    } catch (error: any) {
+      console.error("Error al cerrar sesión:", error);
+      alert(error.message || "No se pudo cerrar sesión.");
+    }
+  };
 
   return (
     <>
@@ -109,8 +107,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
         </div>
 
+        {/* 👇 Botón de logout */}
         <div className="p-4 text-center border-t border-white/5 bg-black/10">
-          <p className="text-xs text-[#E8D6AF]/40 tracking-widest font-mono"></p>
+          <button
+            onClick={handleLogout}
+            className="w-full py-2 px-4 rounded-lg bg-[#EAD9B6] text-[#6B3118] font-semibold hover:bg-[#d9c28f] transition-colors"
+          >
+            Cerrar sesión
+          </button>
         </div>
       </aside>
     </>

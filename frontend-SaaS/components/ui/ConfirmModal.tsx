@@ -5,21 +5,14 @@ import Button from "@/components/ui/Button";
 
 interface ConfirmModalProps {
   isOpen: boolean;
-
   title: string;
-
   message: string;
-
   confirmText?: string;
-
   cancelText?: string;
-
   loading?: boolean;
-
   variant?: "danger" | "primary";
-
+  errorMessage?: string; // ✅ nueva prop
   onClose: () => void;
-
   onConfirm: () => void;
 }
 
@@ -27,10 +20,11 @@ export default function ConfirmModal({
   isOpen,
   title,
   message,
-  confirmText = "Confirmar",
+  confirmText = "Eliminar",
   cancelText = "Cancelar",
   loading = false,
   variant = "danger",
+  errorMessage, // ✅ recibimos la prop
   onClose,
   onConfirm,
 }: ConfirmModalProps) {
@@ -42,9 +36,9 @@ export default function ConfirmModal({
 
           <p className="mt-3 text-[#5A2E1F]">{message}</p>
 
-          <p className="mt-2 text-sm text-red-500">
-            Esta acción no podrá deshacerse.
-          </p>
+          {errorMessage && ( // ✅ renderizamos si existe
+            <p className="mt-2 text-sm text-red-500">{errorMessage}</p>
+          )}
         </div>
 
         <div className="flex justify-end gap-3">

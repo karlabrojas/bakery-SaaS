@@ -130,7 +130,7 @@ export class SaleService {
     };
   }
 
-  static async update(saleId: string, data: CreateSaleDTO) {
+  static async update(saleId: string, data: CreateSaleDTO, bakery_id: string) {
     const productIds = data.items.map((item) => item.productId);
 
     const { data: products, error } = await supabase
@@ -167,12 +167,13 @@ export class SaleService {
     const { data: updatedSale, error: updateError } = await supabase
       .from("sales")
       .update({
-        bakery_id: data.bakeryId,
+        bakery_id: bakery_id,
         customer_id: data.customerId ?? null,
         payment_method: data.paymentMethod,
         total_amount: totalAmount,
       })
       .eq("id", saleId)
+      .eq("bakery_id", bakery_id)
       .select()
       .single();
 
