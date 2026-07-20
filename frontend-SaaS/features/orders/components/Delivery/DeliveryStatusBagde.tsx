@@ -3,30 +3,38 @@ interface Props {
 }
 
 export default function DeliveryStatusBadge({ status }: Props) {
-  const styles: any = {
-    PENDING: "bg-yellow-100 text-yellow-700",
+  // Mapeo de traducciones legibles
+  const labelMap: Record<string, string> = {
+    PENDING: "Pendiente",
+    ASSIGNED: "Asignado",
+    IN_ROUTE: "En Ruta",
+    DELIVERED: "Entregado",
+    CANCELLED: "Cancelado",
+  };
 
-    ASSIGNED: "bg-blue-100 text-blue-700",
-
-    IN_ROUTE: "bg-purple-100 text-purple-700",
-
-    DELIVERED: "bg-green-100 text-green-700",
-
-    CANCELLED: "bg-red-100 text-red-700",
+  // Estilos basados exactamente en los badges de tu segunda captura
+  const styles: Record<string, string> = {
+    PENDING: "bg-[#FCEFC7] text-[#8C6D1C]",
+    ASSIGNED: "bg-[#E0F2FE] text-[#0369A1]",
+    IN_ROUTE: "bg-[#F3E8FF] text-[#6B21A8]",
+    DELIVERED: "bg-[#D1FAE5] text-[#065F46]",
+    CANCELLED: "bg-[#FEE2E2] text-[#991B1B]",
   };
 
   return (
     <span
       className={`
-px-3
-py-1
-rounded-full
-font-semibold
-text-sm
-${styles[status]}
-`}
+        px-3
+        py-1
+        rounded-full
+        font-semibold
+        text-xs
+        shadow-sm
+        inline-block
+        ${styles[status] || "bg-gray-100 text-gray-750"}
+      `}
     >
-      {status}
+      {labelMap[status] || status}
     </span>
   );
 }
