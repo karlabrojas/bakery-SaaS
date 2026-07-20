@@ -53,8 +53,9 @@ export class SaleController {
   static async update(req: Request, res: Response) {
     try {
       const saleId = req.params.id as string;
+      const bakeryId = req.user!.bakeryId; 
 
-      const sale = await SaleService.update(saleId, req.body);
+      const sale = await SaleService.update(saleId, req.body, bakeryId);
 
       return res.status(200).json({
         success: true,

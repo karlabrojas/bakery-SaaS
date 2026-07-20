@@ -23,6 +23,8 @@ interface ConfirmModalProps {
   onClose: () => void;
 
   onConfirm: () => void;
+  
+  error?: string
 }
 
 export default function ConfirmModal({
@@ -33,6 +35,7 @@ export default function ConfirmModal({
   cancelText = "Cancelar",
   loading = false,
   variant = "danger",
+  error,
   onClose,
   onConfirm,
 }: ConfirmModalProps) {
@@ -47,6 +50,12 @@ export default function ConfirmModal({
           <p className="mt-2 text-sm text-red-500">
             Esta acción no podrá deshacerse.
           </p>
+
+          {error && (
+            <div className="mt-4 bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl">
+              {error}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-3">
@@ -54,9 +63,11 @@ export default function ConfirmModal({
             {cancelText}
           </Button>
 
-          <Button variant={variant} onClick={onConfirm} disabled={loading}>
-            {loading ? "Procesando..." : confirmText}
-          </Button>
+          {!error && (
+            <Button variant={variant} onClick={onConfirm} disabled={loading}>
+              {loading ? "Procesando..." : confirmText}
+            </Button>
+          )}
         </div>
       </div>
     </Modal>

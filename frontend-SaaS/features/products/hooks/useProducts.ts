@@ -1,48 +1,78 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { deleteProduct, fetchProducts } from "../services/products.service";
+import { activarProduct, deactivateProduct, deleteProduct, fetchAllProducts, updateProduct } from "../services/products.service";
 import { Product } from "../types/product.type";
 
 export function useProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const loadProducts = async () => {
-    setLoading(true);
-    setError(null);
+    const loadProducts = async () => {
+        setLoading(true);
+      
+        try {
+            const data = await fetchAllProducts();
+            setProducts(data);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    try {
-      const data = await fetchProducts();
-      setProducts(data);
-    } catch (err: any) {
-      setError(err.message || "Error al obtener los productos.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        loadProducts();
+    }, []);
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteProduct(id);
+    const handleUpdate = async (id: string, data: {
+        name: string;
+        description: string;
+        price: number;
+        category: string;
+    }) => {
+        try {
+            const formData = new FormData();
+            formData.append("name", data.name);
+            formData.append("description", data.description);
+            formData.append("price", String(data.price));
+            formData.append("category", data.category);
 
-      setProducts((prev) => prev.filter((product) => product.id !== id));
-    } catch (err: any) {
-      setError(err.message || "Error al eliminar el producto.");
-      throw err;
-    }
-  };
+            await updateProduct(id, formData);
+            await loadProducts();
+        } catch (err: any) {
+            throw err;
+        }
+    };
 
-  return {
-    products,
-    loading,
-    error,
-    loadProducts,
-    handleDelete,
-  };
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteProduct(id);
+            setProducts((prev) => prev.filter((p) => p.id !== id));
+        } catch (err: any) {
+            throw err;
+        }
+    };
+
+    const handleDeactivate = async (id: string) => {
+        try {
+            await deactivateProduct(id);
+            await loadProducts();
+        } catch (err: any) {
+            throw err;
+        }
+    };
+
+    const handleActivate = async (id: string) => {
+        try {
+            await activarProduct(id);
+            await loadProducts();
+        } catch (err: any) {
+            setError(err.message);
+        }
+    };
+
+    return { products, loading, error, handleUpdate, loadProducts, handleDelete, handleActivate, handleDeactivate };
 }
