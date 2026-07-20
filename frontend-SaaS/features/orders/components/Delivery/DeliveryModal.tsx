@@ -23,9 +23,7 @@ export default function DeliveryModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      {/* Contenedor sin paddings bruscos para imitar la cabecera oscura */}
       <div className="overflow-hidden rounded-2xl bg-[#FAF6E9]">
-        {/* Cabecera idéntica a tu diseño */}
         <div className="bg-[#472D20] text-white p-5 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold">
@@ -44,7 +42,6 @@ export default function DeliveryModal({
           </button>
         </div>
 
-        {/* Cuerpo del Formulario */}
         <div className="p-6 space-y-6">
           <DeliveryForm
             initialData={delivery}
@@ -52,7 +49,6 @@ export default function DeliveryModal({
             onSubmit={onSubmit}
           />
 
-          {/* Pie del modal con los botones estilizados */}
           <div className="flex justify-end gap-3 pt-4 border-t border-[#EAD9B6]/40">
             <button
               type="button"

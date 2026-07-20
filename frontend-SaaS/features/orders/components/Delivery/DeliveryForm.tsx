@@ -15,7 +15,6 @@ export default function DeliveryForm({
   onChange,
   onSubmit,
 }: DeliveryFormProps) {
-  // 🛠️ REGRESAMOS A SNAKE_CASE: Para coincidir al 100% con tu interfaz Delivery real
   const [form, setForm] = useState({
     address: initialData?.address || "",
     recipient_name: initialData?.recipient_name || "",
@@ -41,7 +40,7 @@ export default function DeliveryForm({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
-            Nombre del Recipiente *
+            Nombre del Destinatario *
           </label>
           <Input
             required
@@ -57,7 +56,7 @@ export default function DeliveryForm({
           </label>
           <Input
             required
-            placeholder="Ej. 5512345678"
+            placeholder="Ej. 2381234567"
             value={form.recipient_phone}
             onChange={(e) => change("recipient_phone", e.target.value)}
           />
@@ -85,7 +84,6 @@ export default function DeliveryForm({
             value={form.status}
             onChange={(e) => change("status", e.target.value)}
           >
-            {/* 🛠️ Restaurados los estados exactos de tu DeliveryStatus */}
             <option value="PENDING">Pendiente</option>
             <option value="ASSIGNED">Asignada</option>
             <option value="IN_ROUTE">En ruta</option>

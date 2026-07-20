@@ -23,13 +23,11 @@ export default function DeliveryCard({
   };
 
   return (
-    // Se fuerza rounded-2xl, fondo blanco e hilos de la app
     <Card className="bg-white p-6 rounded-2xl border border-[#EAD9B6]/40 shadow-sm space-y-5">
       <div className="flex justify-between items-center border-b border-stone-100 pb-3">
         <h3 className="text-xl font-bold text-[#472D20] flex items-center gap-2">
           <span>🚚</span> Detalles de Entrega
         </h3>
-        {/* Usamos el badge estilizado dinámico */}
         <DeliveryStatusBadge status={delivery.status} />
       </div>
 

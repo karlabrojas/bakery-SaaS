@@ -1,4 +1,3 @@
-// features/orders/hooks/useOrders.ts
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,7 +5,7 @@ import {
   fetchOrders,
   deleteOrder,
   convertOrderToSale,
-  createOrder, // 👈 Importamos la función del servicio
+  createOrder,
 } from "../services/orders.service";
 import { Order, CreateOrderDTO } from "../types/order.type";
 
@@ -32,13 +31,12 @@ export function useOrders() {
     loadOrders();
   }, []);
 
-  // 🌟 NUEVA FUNCIÓN: Envía los datos al servicio y refresca la lista
   const handleCreateOrder = async (orderData: CreateOrderDTO) => {
     setLoading(true);
     setError(null);
     try {
       const newOrder = await createOrder(orderData);
-      await loadOrders(); // Actualiza la tabla automáticamente
+      await loadOrders();
       return newOrder;
     } catch (err: any) {
       setError(err.message || "Error al crear el pedido");
@@ -80,7 +78,7 @@ export function useOrders() {
     error,
     loadingConvert,
     loadOrders,
-    handleCreateOrder, // 👈 Expuesto para el Modal
+    handleCreateOrder,
     handleDelete,
     handleConvertToSale,
   };

@@ -93,7 +93,6 @@ export function OrdersTable() {
 
   return (
     <>
-      {/* CABECERA ESTILO GESTIÓN DE VENTAS */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-bold text-[#472D20] tracking-tight">
@@ -116,7 +115,6 @@ export function OrdersTable() {
         Historial de Pedidos
       </h2>
 
-      {/* TARJETA BLANCA CONTENEDORA DE LA TABLA */}
       <div className="bg-white rounded-2xl border border-stone-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden">
         <div className="overflow-x-auto">
           <Table headers={tableHeaders}>
@@ -135,19 +133,16 @@ export function OrdersTable() {
                   key={order.id}
                   className="border-b border-stone-100 last:border-b-0 hover:bg-[#FAF6F0]/40 transition-colors"
                 >
-                  {/* Folio estilizado como Pill */}
                   <td className="px-4 py-4.5 vertical-middle">
                     <span className="bg-stone-100 text-stone-800 text-xs font-bold px-2.5 py-1 rounded-md tracking-wider">
                       {order.folio}
                     </span>
                   </td>
 
-                  {/* Badge de Estado */}
                   <td className="px-4 py-4.5 vertical-middle">
                     <OrderStatusBadge status={order.status} />
                   </td>
 
-                  {/* Tipo de Entrega */}
                   <td className="px-4 py-4.5 text-stone-600 text-sm font-medium vertical-middle">
                     {order.delivery_type === "PICKUP" ? (
                       <span className="flex items-center gap-1.5">
@@ -160,20 +155,16 @@ export function OrdersTable() {
                     )}
                   </td>
 
-                  {/* Fecha */}
                   <td className="px-4 py-4.5 text-stone-600 text-sm vertical-middle">
                     {order.delivery_date}
                   </td>
 
-                  {/* Total */}
                   <td className="px-4 py-4.5 font-bold text-stone-900 text-sm vertical-middle">
                     ${order.total.toFixed(2)}
                   </td>
 
-                  {/* Acciones del Sistema */}
                   <td className="px-4 py-4.5 vertical-middle">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      {/* Detalle (Pill Neutral) */}
                       <button
                         onClick={() => setDetalle(order)}
                         className="text-xs font-semibold px-3 py-1.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-600 rounded-lg transition"
@@ -181,7 +172,6 @@ export function OrdersTable() {
                         Detalle
                       </button>
 
-                      {/* Editar (Pill Neutral) */}
                       <button
                         onClick={() => setEditando(order)}
                         className="text-xs font-semibold px-3 py-1.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-600 rounded-lg transition"
@@ -189,7 +179,6 @@ export function OrdersTable() {
                         Editar
                       </button>
 
-                      {/* Logística de Envíos */}
                       {order.delivery_type === "DELIVERY" && (
                         <button
                           onClick={() =>
@@ -201,17 +190,15 @@ export function OrdersTable() {
                         </button>
                       )}
 
-                      {/* Convertir a Venta Directa */}
                       {order.status === "READY" && (
                         <button
                           onClick={() => setConvirtiendo(order)}
                           className="text-xs font-bold px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg transition"
                         >
-                          💸 Vender
+                          Vender
                         </button>
                       )}
 
-                      {/* Eliminar (Pill Rojo sutil) */}
                       {["PENDING", "CANCELLED"].includes(order.status) && (
                         <button
                           onClick={() => setEliminando(order)}
@@ -229,7 +216,6 @@ export function OrdersTable() {
         </div>
       </div>
 
-      {/* CONTENEDORES DE MODALES */}
       <CreateOrderModal
         isOpen={modalCrear}
         onClose={() => setModalCrear(false)}

@@ -1,4 +1,4 @@
-import { Order, CreateOrderDTO } from "../types/order.type";
+import { Order, CreateOrderDTO, UpdateOrderDTO } from "../types/order.type";
 
 const api = process.env.NEXT_PUBLIC_API_URL;
 
@@ -38,7 +38,7 @@ export async function createOrder(data: CreateOrderDTO): Promise<Order> {
 
 export async function updateOrder(
   id: string,
-  data: Partial<CreateOrderDTO>,
+  data: UpdateOrderDTO, // ⚡ Cambiado aquí
 ): Promise<Order> {
   const res = await fetch(`${api}/api/orders/${id}`, {
     method: "PUT",

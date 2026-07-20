@@ -3,7 +3,6 @@ interface Props {
 }
 
 export default function DeliveryStatusBadge({ status }: Props) {
-  // Mapeo de traducciones legibles
   const labelMap: Record<string, string> = {
     PENDING: "Pendiente",
     ASSIGNED: "Asignado",
@@ -12,7 +11,6 @@ export default function DeliveryStatusBadge({ status }: Props) {
     CANCELLED: "Cancelado",
   };
 
-  // Estilos basados exactamente en los badges de tu segunda captura
   const styles: Record<string, string> = {
     PENDING: "bg-[#FCEFC7] text-[#8C6D1C]",
     ASSIGNED: "bg-[#E0F2FE] text-[#0369A1]",

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Order } from "../types/order.type";
-// 🚀 Asegúrate de importar tu servicio para actualizar aquí:
-// import { updateOrder } from "../services/orders.service";
+import { updateOrder } from "../services/orders.service";
 
 interface EditOrderModalProps {
   isOpen: boolean;
@@ -19,7 +18,6 @@ export default function EditOrderModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 1. Estados locales alineados a los campos de la base de datos
   const [status, setStatus] = useState<Order["status"]>("PENDING");
   const [deliveryType, setDeliveryType] =
     useState<Order["delivery_type"]>("PICKUP");
@@ -27,13 +25,12 @@ export default function EditOrderModal({
   const [deliveryTime, setDeliveryTime] = useState("");
   const [notes, setNotes] = useState("");
 
-  // 2. Efecto para rellenar los inputs con la información actual al abrir el formulario
   useEffect(() => {
     if (isOpen && order) {
       setStatus(order.status);
-      setDeliveryType(order.delivery_type);
-      setDeliveryDate(order.delivery_date || "");
-      setDeliveryTime(order.delivery_time || "");
+      setDeliveryType(order.delivery_type || (order as any).deliveryType);
+      setDeliveryDate(order.delivery_date || (order as any).deliveryDate || "");
+      setDeliveryTime(order.delivery_time || (order as any).deliveryTime || "");
       setNotes(order.notes || "");
       setError("");
     }
@@ -47,17 +44,16 @@ export default function EditOrderModal({
       setLoading(true);
       setError("");
 
-      // 🚀 Petición HTTP pasándole los estados modificados
-      // await updateOrder(order.id, {
-      //   status,
-      //   delivery_type: deliveryType,
-      //   delivery_date: deliveryDate,
-      //   delivery_time: deliveryTime,
-      //   notes
-      // });
+      await updateOrder(order.id, {
+        status,
+        deliveryType: deliveryType,
+        deliveryDate: deliveryDate,
+        deliveryTime: deliveryTime,
+        notes,
+      });
 
-      await onSuccess(); // Refresca la tabla
-      onClose(); // Cierra el modal
+      await onSuccess();
+      onClose();
     } catch (err: any) {
       console.error("Error al actualizar la orden:", err);
       setError(err.message || "No se pudo actualizar el pedido.");
@@ -69,7 +65,6 @@ export default function EditOrderModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-        {/* Cabecera Fija (Estilo Café Sólido como OrderDetailModal) */}
         <div className="relative bg-[#472D20] px-6 py-5 rounded-t-2xl flex justify-between items-start sticky top-0 z-10">
           <div>
             <h2 className="text-2xl font-bold text-white">Editar Pedido</h2>
@@ -84,22 +79,18 @@ export default function EditOrderModal({
           </button>
         </div>
 
-        {/* Cuerpo con Scroll y Formulario */}
         <form
           onSubmit={handleFormSubmit}
           className="flex-1 overflow-y-auto flex flex-col"
         >
           <div className="space-y-6 p-6 flex-1">
-            {/* Mensaje de error si ocurre una falla */}
             {error && (
               <div className="bg-red-50 text-red-600 text-sm p-4 rounded-xl border border-red-200 font-medium text-center">
                 {error}
               </div>
             )}
 
-            {/* Grid del Formulario */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-stone-50 rounded-xl p-5 border border-stone-200/40">
-              {/* Estado del Pedido */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                   Estado actual
@@ -118,7 +109,6 @@ export default function EditOrderModal({
                 </select>
               </div>
 
-              {/* Tipo de Entrega */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                   Tipo de entrega
@@ -133,7 +123,6 @@ export default function EditOrderModal({
                 </select>
               </div>
 
-              {/* Fecha de Entrega */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                   Fecha de entrega
@@ -146,7 +135,6 @@ export default function EditOrderModal({
                 />
               </div>
 
-              {/* Hora de Entrega */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                   Hora de entrega
@@ -159,7 +147,6 @@ export default function EditOrderModal({
                 />
               </div>
 
-              {/* Notas del pedido */}
               <div className="flex flex-col gap-1 col-span-2">
                 <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                   Notas / Observaciones
@@ -174,7 +161,6 @@ export default function EditOrderModal({
               </div>
             </div>
 
-            {/* Información estática informativa del total */}
             <div className="flex justify-between items-center bg-amber-50/40 border border-amber-200/60 p-4 rounded-xl">
               <span className="text-sm font-semibold text-stone-600">
                 Total acumulado del pedido:
@@ -185,7 +171,6 @@ export default function EditOrderModal({
             </div>
           </div>
 
-          {/* Acciones del Formulario Fijas Abajo */}
           <div className="border-t border-stone-100 bg-stone-50/50 p-4 flex justify-end gap-3 sticky bottom-0">
             <button
               type="button"

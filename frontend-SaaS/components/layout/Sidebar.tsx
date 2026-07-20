@@ -107,7 +107,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
         </div>
 
-        {/* 👇 Botón de logout */}
         <div className="p-4 text-center border-t border-white/5 bg-black/10">
           <button
             onClick={handleLogout}

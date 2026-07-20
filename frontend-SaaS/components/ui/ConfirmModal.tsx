@@ -11,7 +11,7 @@ interface ConfirmModalProps {
   cancelText?: string;
   loading?: boolean;
   variant?: "danger" | "primary";
-  errorMessage?: string; // ✅ nueva prop
+  errorMessage?: string;
   onClose: () => void;
   onConfirm: () => void;
 }
@@ -24,7 +24,7 @@ export default function ConfirmModal({
   cancelText = "Cancelar",
   loading = false,
   variant = "danger",
-  errorMessage, // ✅ recibimos la prop
+  errorMessage,
   onClose,
   onConfirm,
 }: ConfirmModalProps) {
@@ -36,7 +36,7 @@ export default function ConfirmModal({
 
           <p className="mt-3 text-[#5A2E1F]">{message}</p>
 
-          {errorMessage && ( // ✅ renderizamos si existe
+          {errorMessage && (
             <p className="mt-2 text-sm text-red-500">{errorMessage}</p>
           )}
         </div>

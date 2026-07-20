@@ -13,15 +13,8 @@ export default function DeliveryPageContent() {
   const router = useRouter();
   const orderId = searchParams.get("orderId");
 
-  const {
-    delivery,
-    loading,
-    error,
-    loadDelivery,
-    saveDelivery,
-    update,
-    complete,
-  } = useDeliveries();
+  const { delivery, loading, error, loadDelivery, update, complete } =
+    useDeliveries();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -47,14 +40,11 @@ export default function DeliveryPageContent() {
 
   const handleFormSubmit = async (formData: any) => {
     try {
-      if (delivery) {
-        await update(orderId, formData);
-      } else {
-        await saveDelivery(orderId, formData);
-      }
+      await update(orderId, formData);
+      await loadDelivery(orderId);
       setIsModalOpen(false);
     } catch (err) {
-      console.error(err);
+      console.error("Error al actualizar la entrega:", err);
     }
   };
 
@@ -73,12 +63,6 @@ export default function DeliveryPageContent() {
               Logística de Entrega
             </h1>
           </div>
-
-          {!delivery && !loading && (
-            <Button onClick={() => setIsModalOpen(true)}>
-              Programar Envío
-            </Button>
-          )}
         </section>
 
         {loading && (
@@ -91,13 +75,6 @@ export default function DeliveryPageContent() {
           <p className="text-red-500 font-medium bg-red-50 p-4 rounded-xl border border-red-200">
             Error: {error}
           </p>
-        )}
-
-        {!loading && !delivery && !error && (
-          <div className="bg-white border border-[#EAD9B6]/50 rounded-2xl p-12 text-center text-stone-500 shadow-sm">
-            <span className="text-4xl block mb-3">📦</span>
-            Este pedido no cuenta con una entrega programada aún.
-          </div>
         )}
 
         {delivery && (
