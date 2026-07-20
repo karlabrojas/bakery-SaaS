@@ -219,28 +219,88 @@ export default function OrderDetailModal({
 
               {/* Bloque condicional si requiere Delivery */}
               {deliveryData && order.delivery_type === "DELIVERY" && (
-                <div className="col-span-1 md:col-span-2 border-t border-[#E6DEC9] pt-3 mt-1 space-y-2">
-                  <p className="text-xs font-bold uppercase text-stone-500 tracking-wider">
-                    Estado de la entrega
-                  </p>
-                  <div>
-                    <DeliveryStatusBadge status={deliveryData.status} />
+                <div className="col-span-1 md:col-span-2 border-t border-[#E6DEC9] pt-4 mt-2">
+                  <h3 className="text-xs font-bold uppercase text-stone-500 tracking-wider mb-4">
+                    Información de la entrega
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase text-stone-500">
+                        Estado
+                      </p>
+                      <div className="mt-1">
+                        <DeliveryStatusBadge status={deliveryData.status} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold uppercase text-stone-500">
+                        Fecha estimada
+                      </p>
+                      <p className="mt-1 text-sm text-stone-800">
+                        {deliveryData.estimated_delivery
+                          ? new Date(
+                              deliveryData.estimated_delivery,
+                            ).toLocaleString("es-MX")
+                          : "No definida"}
+                      </p>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <p className="text-xs font-bold uppercase text-stone-500">
+                        Dirección de entrega
+                      </p>
+                      <p className="mt-1 text-sm text-stone-800">
+                        {deliveryData.address || "Sin dirección"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold uppercase text-stone-500">
+                        Destinatario
+                      </p>
+                      <p className="mt-1 text-sm text-stone-800">
+                        {deliveryData.recipient_name || "No registrado"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold uppercase text-stone-500">
+                        Teléfono
+                      </p>
+                      <p className="mt-1 text-sm text-stone-800">
+                        {deliveryData.recipient_phone || "No registrado"}
+                      </p>
+                    </div>
+
+                    {deliveryData.delivery_at && (
+                      <div>
+                        <p className="text-xs font-bold uppercase text-stone-500">
+                          Entregado el
+                        </p>
+                        <p className="mt-1 text-sm text-stone-800">
+                          {new Date(deliveryData.delivery_at).toLocaleString(
+                            "es-MX",
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                    {deliveryData.notes && (
+                      <div className="md:col-span-2">
+                        <p className="text-xs font-bold uppercase text-stone-500">
+                          Indicaciones
+                        </p>
+
+                        <div className="mt-1 rounded-lg border border-[#EFE9DD] bg-white p-3 text-sm text-stone-700">
+                          {deliveryData.notes}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-stone-800">
-                    <span className="font-bold text-stone-600">Dirección:</span>{" "}
-                    {deliveryData.address}
-                  </p>
-                  {deliveryData.reference && (
-                    <p className="text-sm bg-white p-2.5 rounded-lg border border-[#EFE9DD] text-stone-700 italic">
-                      <span className="font-bold text-stone-600 not-italic">
-                        Referencia:
-                      </span>{" "}
-                      {deliveryData.reference}
-                    </p>
-                  )}
                 </div>
               )}
-
               <div className="border-t border-[#E6DEC9]/60 md:border-t-0 pt-2 md:pt-0">
                 <p className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                   Fecha de entrega
