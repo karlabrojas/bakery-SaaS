@@ -281,7 +281,6 @@ export function OrdersTable() {
         confirmText="Eliminar"
         loading={loadingDelete}
         variant="danger"
-        error={errorEliminar}
         onClose={() => {
           setEliminando(null);
           setErrorEliminar("");
