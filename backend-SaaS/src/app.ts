@@ -4,9 +4,14 @@ import cookieParser from "cookie-parser";
 import saleRoutes from "./modules/sales/routes/saleRoutes";
 import productRoutes from "./modules/products/routes/productRoutes";
 import authRoutes from "./modules/auth/routes/auth.routes";
+import customerRoutes from "./modules/customers/routes/customerRoutes";
+
 import { supabase } from "./config/supabase";
 import orderRoutes from "./modules/orders/routes/orderRoutes";
-import customerRoutes from "./modules/customers/routes/customerRoutes";
+import paymentRoutes from "./modules/orders/routes/paymentRoutes";
+import deliveryRoutes from "./modules/orders/routes/deliveryRoutes";
+
+import { supabase } from "./config/supabase";
 
 const app = express();
 const frontendURL = process.env.URL_FRONTEND;
@@ -25,7 +30,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.post("/orders", async (req, res) => {
+app.post("/landing", async (req, res) => {
   try {
     const { name, email, problem } = req.body;
     const { data, error } = await supabase
@@ -51,11 +56,14 @@ app.post("/orders", async (req, res) => {
   }
 });
 
-// Rutas de módulos
+app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/sales", saleRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/customers", customerRoutes);
+
 app.use("/api/orders", orderRoutes);
-app.use("/api/customers", customerRoutes)
+
+app.use("/api/orders/:id/payments", paymentRoutes);
+app.use("/api/orders/:id/delivery", deliveryRoutes);
 
 export default app;

@@ -1,32 +1,39 @@
+import { PaymentMethod } from "../interfaces/advancePayment";
+import { DeliveryType, OrderStatus } from "../interfaces/delivery";
+
+export interface CreateOrderItemDTO {
+  productId: string;
+  quantity: number;
+  observations?: string;
+}
+
 export interface CreateOrderDTO {
-    customerId?: string;
-    deliveryType: "PICKUP" | "DELIVERY";
-    deliveryDate: string;
-    deliveryTime: string;
-    discount?: number;
-    notes?: string;
-    items: {
-        productId: string;
-        quantity: number;
-        observations?: string;
-    }[];
+  bakeryId: string;
+  customerId?: string;
+  deliveryType: DeliveryType;
+  deliveryDate: string;
+  deliveryTime: string;
+  discount?: number;
+  notes?: string;
+  items: CreateOrderItemDTO[];
+  initialAdvance?: {
+    amount: number;
+    paymentMethod: PaymentMethod;
+    reference?: string;
+  };
 }
 
 export interface UpdateOrderDTO {
-    customerId?: string;
-    deliveryType?: "PICKUP" | "DELIVERY";
-    deliveryDate?: string;
-    deliveryTime?: string;
-    discount?: number;
-    notes?: string;
-    items?: {
-        productId: string;
-        quantity: number;
-        observations?: string;
-    }[];
+  customerId?: string;
+  deliveryType?: DeliveryType;
+  deliveryDate?: string;
+  deliveryTime?: string;
+  discount?: number;
+  notes?: string;
+  items?: CreateOrderItemDTO[];
 }
 
 export interface ChangeStatusDTO {
-    status: "PENDING" | "CONFIRMED" | "IN_PRODUCTION" | "READY" | "DELIVERED" | "CANCELLED";
-    comments?: string;
+  status: OrderStatus;
+  comments?: string;
 }

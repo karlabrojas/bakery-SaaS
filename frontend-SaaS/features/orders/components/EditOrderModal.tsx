@@ -1,341 +1,209 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { fetchCustomers, createCustomer } from "../services/customers.service";
-import { fetchProducts } from "@/features/products/services/products.service";
-import { updateOrder } from "../services/orders.service";
+import React, { useState, useEffect } from "react";
 import { Order } from "../types/order.type";
+// 🚀 Asegúrate de importar tu servicio para actualizar aquí:
+// import { updateOrder } from "../services/orders.service";
 
-interface Props {
-    isOpen: boolean;
-    onClose: () => void;
-    onSuccess: () => void;
-    order: Order | null;
+interface EditOrderModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void | Promise<void>;
+  order: Order | null;
 }
 
-export default function EditOrderModal({ isOpen, onClose, onSuccess, order }: Props) {
-    const [customers, setCustomers] = useState<any[]>([]);
-    const [products, setProducts] = useState<any[]>([]);
+export default function EditOrderModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  order,
+}: EditOrderModalProps) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    
-    const [clienteSeleccionado, setClienteSeleccionado] = useState("");
-    const [clienteNombre, setClienteNombre] = useState("");
-    const [clienteTelefono, setClienteTelefono] = useState("");
-    const [mostrarFormCliente, setMostrarFormCliente] = useState(false);
+  // 1. Estados locales alineados a los campos de la base de datos
+  const [status, setStatus] = useState<Order["status"]>("PENDING");
+  const [deliveryType, setDeliveryType] =
+    useState<Order["delivery_type"]>("PICKUP");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryTime, setDeliveryTime] = useState("");
+  const [notes, setNotes] = useState("");
 
-    const [deliveryType, setDeliveryType] = useState<"PICKUP" | "DELIVERY">("PICKUP");
-    const [deliveryDate, setDeliveryDate] = useState("");
-    const [deliveryTime, setDeliveryTime] = useState("");
-    const [notes, setNotes] = useState("");
+  // 2. Efecto para rellenar los inputs con la información actual al abrir el formulario
+  useEffect(() => {
+    if (isOpen && order) {
+      setStatus(order.status);
+      setDeliveryType(order.delivery_type);
+      setDeliveryDate(order.delivery_date || "");
+      setDeliveryTime(order.delivery_time || "");
+      setNotes(order.notes || "");
+      setError("");
+    }
+  }, [isOpen, order]);
 
-   
-    const [items, setItems] = useState<{ productId: string; quantity: number; name: string; price: number }[]>([]);
+  if (!isOpen || !order) return null;
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [exito, setExito] = useState(false);
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError("");
 
-    useEffect(() => {
-        if (!isOpen) return;
-        fetchCustomers().then(setCustomers).catch(console.error);
-        fetchProducts().then(setProducts).catch(console.error);
-    }, [isOpen]);
+      // 🚀 Petición HTTP pasándole los estados modificados
+      // await updateOrder(order.id, {
+      //   status,
+      //   delivery_type: deliveryType,
+      //   delivery_date: deliveryDate,
+      //   delivery_time: deliveryTime,
+      //   notes
+      // });
 
-    
-    useEffect(() => {
-        if (!order || products.length === 0) return;
+      await onSuccess(); // Refresca la tabla
+      onClose(); // Cierra el modal
+    } catch (err: any) {
+      console.error("Error al actualizar la orden:", err);
+      setError(err.message || "No se pudo actualizar el pedido.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setClienteSeleccionado(order.customer_id ?? "");
-        setDeliveryType(order.delivery_type);
-        setDeliveryDate(order.delivery_date);
-        setDeliveryTime(order.delivery_time);
-        setNotes(order.notes ?? "");
-
-        
-        setItems(
-            (order.order_items ?? []).map((item) => {
-                const product = products.find((p) => p.id === item.product_id);
-                return {
-                    productId: item.product_id,
-                    quantity: item.quantity,
-                    name: product?.name ?? "Producto",
-                    price: product?.price ?? item.unit_price,
-                };
-            })
-        );
-    }, [order, products]);
-
-    if (!isOpen || !order) return null;
-
-   
-    const soloLectura = ["CANCELLED", "DELIVERED"].includes(order.status);
-
-    const agregarProducto = () => {
-        if (products.length === 0) return;
-        setItems((prev) => [...prev, {
-            productId: products[0].id,
-            quantity: 1,
-            name: products[0].name,
-            price: products[0].price,
-        }]);
-    };
-
-    const actualizarItem = (index: number, productId: string, quantity: number) => {
-        const product = products.find((p) => p.id === productId);
-        if (!product) return;
-        setItems((prev) => prev.map((item, i) =>
-            i === index ? { productId, quantity, name: product.name, price: product.price } : item
-        ));
-    };
-
-    const eliminarItem = (index: number) => {
-        setItems((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-
-    const handleGuardar = async () => {
-        if (!deliveryDate || !deliveryTime) {
-            setError("La fecha y hora de entrega son obligatorias");
-            return;
-        }
-        if (items.length === 0) {
-            setError("Agrega al menos un producto");
-            return;
-        }
-
-        setLoading(true);
-        setError("");
-
-        try {
-            let customerId = clienteSeleccionado || undefined;
-
-            if (mostrarFormCliente && clienteNombre.trim()) {
-                const nuevoCliente = await createCustomer({
-                    name: clienteNombre,
-                    phone: clienteTelefono,
-                });
-                customerId = nuevoCliente.id;
-            }
-
-            await updateOrder(order.id, {
-                customerId,
-                deliveryType,
-                deliveryDate,
-                deliveryTime,
-                notes,
-                items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
-            });
-
-            setExito(true);
-            setTimeout(() => {
-                setExito(false);
-                onSuccess();
-                onClose();
-            }, 1500);
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div onClick={(e) => e.stopPropagation()} className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-
-                <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white text-xl font-bold z-10">✕</button>
-
-                <div className="w-full space-y-6 p-6">
-                   
-                    <div className="relative -mx-6 -mt-6 bg-[#472D20] pl-6 pr-14 py-5 rounded-t-2xl">
-                        <h2 className="text-2xl font-bold text-white">Editar Pedido</h2>
-                        <p className="text-sm text-[#FBEACE] mt-1">
-                            Folio: {order.folio}
-                            {soloLectura && " — Solo lectura"}
-                        </p>
-                    </div>
-
-                    {soloLectura ? (
-                        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm p-4 rounded-xl text-center font-medium">
-                            Este pedido no puede editarse porque está {order.status === "CANCELLED" ? "cancelado" : "entregado"}.
-                        </div>
-                    ) : (
-                        <>
-                        
-                            <div className="space-y-3">
-                                <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Cliente</label>
-                                <select
-                                    value={clienteSeleccionado}
-                                    onChange={(e) => { setClienteSeleccionado(e.target.value); setMostrarFormCliente(false); }}
-                                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white"
-                                >
-                                    <option value="">Sin cliente / cliente general</option>
-                                    {customers.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.name} {c.phone ? `— ${c.phone}` : ""}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <button
-                                    onClick={() => { setMostrarFormCliente(!mostrarFormCliente); setClienteSeleccionado(""); }}
-                                    className="text-sm text-[#472D20] font-semibold underline"
-                                >
-                                    {mostrarFormCliente ? "Cancelar nuevo cliente" : "+ Agregar nuevo cliente"}
-                                </button>
-
-                                {mostrarFormCliente && (
-                                    <div className="grid grid-cols-2 gap-3 mt-2">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold uppercase text-stone-600 tracking-wider">Nombre *</label>
-                                            <input
-                                                type="text"
-                                                value={clienteNombre}
-                                                onChange={(e) => setClienteNombre(e.target.value)}
-                                                placeholder="Nombre del cliente"
-                                                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold uppercase text-stone-600 tracking-wider">Teléfono</label>
-                                            <input
-                                                type="text"
-                                                value={clienteTelefono}
-                                                onChange={(e) => setClienteTelefono(e.target.value)}
-                                                placeholder="Teléfono"
-                                                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Tipo *</label>
-                                    <select
-                                        value={deliveryType}
-                                        onChange={(e) => setDeliveryType(e.target.value as "PICKUP" | "DELIVERY")}
-                                        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white"
-                                    >
-                                        <option value="PICKUP">Recoger</option>
-                                        <option value="DELIVERY">Envío</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Fecha *</label>
-                                    <input
-                                        type="date"
-                                        value={deliveryDate}
-                                        onChange={(e) => setDeliveryDate(e.target.value)}
-                                        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Hora *</label>
-                                    <input
-                                        type="time"
-                                        value={deliveryTime}
-                                        onChange={(e) => setDeliveryTime(e.target.value)}
-                                        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-                                    />
-                                </div>
-                            </div>
-
-                            
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Productos *</label>
-                                    <button
-                                        onClick={agregarProducto}
-                                        className="text-xs font-bold text-[#472D20] bg-[#FBEACE] px-3 py-1.5 rounded-lg hover:bg-[#f0d9a8] transition"
-                                    >
-                                        + Agregar producto
-                                    </button>
-                                </div>
-
-                                {items.length === 0 ? (
-                                    <p className="text-sm text-stone-400 text-center py-4">No hay productos agregados.</p>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {items.map((item, index) => (
-                                            <div key={index} className="flex items-center gap-3 border border-stone-200 rounded-xl p-3">
-                                                <select
-                                                    value={item.productId}
-                                                    onChange={(e) => actualizarItem(index, e.target.value, item.quantity)}
-                                                    className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#472D20] bg-white"
-                                                >
-                                                    {products.map((p) => (
-                                                        <option key={p.id} value={p.id}>{p.name} — ${p.price}</option>
-                                                    ))}
-                                                </select>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={item.quantity}
-                                                    onChange={(e) => actualizarItem(index, item.productId, Number(e.target.value))}
-                                                    className="w-20 border border-stone-200 rounded-xl px-3 py-2 text-sm text-center outline-none focus:border-[#472D20]"
-                                                />
-                                                <button
-                                                    onClick={() => eliminarItem(index)}
-                                                    className="text-red-500 hover:text-red-700 text-lg font-bold"
-                                                >
-                                                    ✕
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            
-                            <div className="space-y-1.5">
-                                <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Notas</label>
-                                <input
-                                    type="text"
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    placeholder="Observaciones..."
-                                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-                                />
-                            </div>
-
-                            <div className="bg-[#FBEACE] rounded-xl p-4 space-y-1">
-                                <div className="flex justify-between text-sm text-stone-600">
-                                    <span>Subtotal</span>
-                                    <span>${subtotal.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between font-bold text-[#472D20] text-lg">
-                                    <span>Total</span>
-                                    <span>${subtotal.toFixed(2)}</span>
-                                </div>
-                            </div>
-
-                            
-                            <div className="border-t border-stone-200/80 pt-5">
-                                {exito && (
-                                    <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-4 rounded-xl text-center font-medium mb-4">
-                                        Pedido actualizado correctamente
-                                    </div>
-                                )}
-                                {error && (
-                                    <p className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl text-center font-medium mb-4">
-                                        {error}
-                                    </p>
-                                )}
-                                <button
-                                    onClick={handleGuardar}
-                                    disabled={loading}
-                                    className={`w-full h-14 text-lg font-bold bg-[#472D20] text-white rounded-xl transition ${loading ? "opacity-60 cursor-not-allowed" : "hover:bg-[#5c3a2a]"}`}
-                                >
-                                    {loading ? "Guardando..." : "Guardar Cambios"}
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        {/* Cabecera Fija (Estilo Café Sólido como OrderDetailModal) */}
+        <div className="relative bg-[#472D20] px-6 py-5 rounded-t-2xl flex justify-between items-start sticky top-0 z-10">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Editar Pedido</h2>
+            <p className="text-sm text-[#FBEACE] mt-1">Folio: {order.folio}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white/70 hover:text-white text-xl font-bold p-1 rounded-lg transition"
+          >
+            ✕
+          </button>
         </div>
-    );
+
+        {/* Cuerpo con Scroll y Formulario */}
+        <form
+          onSubmit={handleFormSubmit}
+          className="flex-1 overflow-y-auto flex flex-col"
+        >
+          <div className="space-y-6 p-6 flex-1">
+            {/* Mensaje de error si ocurre una falla */}
+            {error && (
+              <div className="bg-red-50 text-red-600 text-sm p-4 rounded-xl border border-red-200 font-medium text-center">
+                {error}
+              </div>
+            )}
+
+            {/* Grid del Formulario */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-stone-50 rounded-xl p-5 border border-stone-200/40">
+              {/* Estado del Pedido */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
+                  Estado actual
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as any)}
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium"
+                >
+                  <option value="PENDING">Pendiente ⏳</option>
+                  <option value="CONFIRMED">Confirmado 👍</option>
+                  <option value="IN_PRODUCTION">En producción 🥖</option>
+                  <option value="READY">Listo / Por Entregar 📦</option>
+                  <option value="DELIVERED">Entregado ✅</option>
+                  <option value="CANCELLED">Cancelado ❌</option>
+                </select>
+              </div>
+
+              {/* Tipo de Entrega */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
+                  Tipo de entrega
+                </label>
+                <select
+                  value={deliveryType}
+                  onChange={(e) => setDeliveryType(e.target.value as any)}
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium"
+                >
+                  <option value="PICKUP">🏠 Recoger en tienda</option>
+                  <option value="DELIVERY">🚚 Envío a domicilio</option>
+                </select>
+              </div>
+
+              {/* Fecha de Entrega */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
+                  Fecha de entrega
+                </label>
+                <input
+                  type="date"
+                  value={deliveryDate}
+                  onChange={(e) => setDeliveryDate(e.target.value)}
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium"
+                />
+              </div>
+
+              {/* Hora de Entrega */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
+                  Hora de entrega
+                </label>
+                <input
+                  type="time"
+                  value={deliveryTime}
+                  onChange={(e) => setDeliveryTime(e.target.value)}
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium"
+                />
+              </div>
+
+              {/* Notas del pedido */}
+              <div className="flex flex-col gap-1 col-span-2">
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
+                  Notas / Observaciones
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Añade especificaciones sobre la entrega o la preparación..."
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Información estática informativa del total */}
+            <div className="flex justify-between items-center bg-amber-50/40 border border-amber-200/60 p-4 rounded-xl">
+              <span className="text-sm font-semibold text-stone-600">
+                Total acumulado del pedido:
+              </span>
+              <span className="text-xl font-black text-[#472D20]">
+                ${order.total.toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {/* Acciones del Formulario Fijas Abajo */}
+          <div className="border-t border-stone-100 bg-stone-50/50 p-4 flex justify-end gap-3 sticky bottom-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-100 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2.5 bg-[#472D20] text-white rounded-xl text-sm font-bold hover:bg-[#362117] disabled:opacity-60 disabled:cursor-not-allowed transition shadow-sm"
+            >
+              {loading ? "Guardando..." : "Guardar Cambios"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
