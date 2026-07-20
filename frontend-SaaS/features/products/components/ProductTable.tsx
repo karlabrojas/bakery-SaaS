@@ -13,8 +13,15 @@ import Button from "@/components/ui/Button";
 import SearchInput from "@/components/ui/SearchInput";
 
 export default function InventoryTable() {
-  const { products, loading, error, loadProducts, handleDelete, handleActivate, handleDeactivate } =
-    useProducts();
+  const {
+    products,
+    loading,
+    error,
+    loadProducts,
+    handleDelete,
+    handleActivate,
+    handleDeactivate,
+  } = useProducts();
 
   const [editando, setEditando] = useState<Product | null>(null);
   const [modalAgregar, setModalAgregar] = useState(false);
@@ -23,11 +30,9 @@ export default function InventoryTable() {
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [errorEliminar, setErrorEliminar] = useState("");
 
-
   const [busqueda, setBusqueda] = useState("");
 
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
-
 
   const [activando, setActivando] = useState<Product | null>(null);
   const [desactivando, setDesactivando] = useState<Product | null>(null);
@@ -57,7 +62,7 @@ export default function InventoryTable() {
     } catch (err: any) {
       if (err.tieneVentas) {
         setErrorEliminar(
-          "No se puede eliminar este producto porque tiene historial de ventas. Puedes desactivarlo en su lugar."
+          "No se puede eliminar este producto porque tiene historial de ventas. Puedes desactivarlo en su lugar.",
         );
       } else {
         setErrorEliminar(err.message);
@@ -112,7 +117,6 @@ export default function InventoryTable() {
   return (
     <>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
-
         <div className="w-full sm:max-w-xs">
           <SearchInput value={busqueda} onChange={setBusqueda} />
         </div>
@@ -138,11 +142,13 @@ export default function InventoryTable() {
         </div>
 
         <div className="sm:ml-auto w-full sm:w-auto">
-          <Button className="w-full sm:w-auto" onClick={() => setModalAgregar(true)}>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => setModalAgregar(true)}
+          >
             + Agregar producto
           </Button>
         </div>
-
       </div>
 
       {/* Tabla */}
@@ -170,10 +176,12 @@ export default function InventoryTable() {
             productosFiltrados.map((product) => (
               <tr
                 key={product.id}
-                className={`border-b border-stone-100 last:border-none transition-colors ${product.is_active
-                  ? "hover:bg-stone-50/50"
-                  : "bg-red-50/30 hover:bg-red-50/50 opacity-70" 
-                  }`}              >
+                className={`border-b border-stone-100 last:border-none transition-colors ${
+                  product.is_active
+                    ? "hover:bg-stone-50/50"
+                    : "bg-red-50/30 hover:bg-red-50/50 opacity-70"
+                }`}
+              >
                 {/* Imagen */}
 
                 <td className="px-4 py-3">
@@ -195,10 +203,13 @@ export default function InventoryTable() {
                 <td className="px-4 py-3 font-semibold text-[#472D20]">
                   <div className="flex items-center gap-2">
                     {product.name}
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${product.is_active
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-600"
-                      }`}>
+                    <span
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        product.is_active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-600"
+                      }`}
+                    >
                       {product.is_active ? "Activo" : "Inactivo"}
                     </span>
                   </div>
@@ -235,11 +246,16 @@ export default function InventoryTable() {
                     </button>
 
                     <button
-                      onClick={() => product.is_active ? setDesactivando(product) : setActivando(product)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${product.is_active
-                        ? "bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
-                        : "bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                        }`}
+                      onClick={() =>
+                        product.is_active
+                          ? setDesactivando(product)
+                          : setActivando(product)
+                      }
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+                        product.is_active
+                          ? "bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
+                          : "bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                      }`}
                     >
                       {product.is_active ? "Desactivar" : "Activar"}
                     </button>
@@ -271,8 +287,11 @@ export default function InventoryTable() {
         confirmText="Eliminar"
         loading={loadingDelete}
         variant="danger"
-        error={errorEliminar}
-        onClose={() => { setEliminando(null); setErrorEliminar(""); }}
+        errorMessage={errorEliminar}
+        onClose={() => {
+          setEliminando(null);
+          setErrorEliminar("");
+        }}
         onConfirm={handleConfirmarEliminar}
       />
 
