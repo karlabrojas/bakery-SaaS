@@ -32,13 +32,14 @@ export default function DeliveryCard({
       </div>
 
       <div className="space-y-3 text-stone-700 text-sm md:text-base">
+        {/* ⚡ Renderizado seguro multiformato */}
         <p>
           <strong className="text-[#472D20]">Destinatario:</strong>{" "}
-          {delivery.recipient_name}
+          {(delivery as any).recipientName ?? delivery.recipient_name}
         </p>
         <p>
           <strong className="text-[#472D20]">Teléfono:</strong>{" "}
-          {delivery.recipient_phone}
+          {(delivery as any).recipientPhone ?? delivery.recipient_phone}
         </p>
         <p>
           <strong className="text-[#472D20]">Dirección:</strong>{" "}
@@ -47,7 +48,10 @@ export default function DeliveryCard({
         <p>
           <strong className="text-[#472D20]">Entrega Estimada:</strong>{" "}
           <span className="bg-[#FAF6E9] px-2 py-0.5 rounded text-[#472D20] font-medium text-sm">
-            {formatDateTime(delivery.estimated_delivery)}
+            {formatDateTime(
+              (delivery as any).estimatedDelivery ??
+                delivery.estimated_delivery,
+            )}
           </span>
         </p>
         {delivery.delivery_at && (

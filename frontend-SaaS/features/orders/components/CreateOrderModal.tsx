@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import DeliveryForm from "./Delivery/DeliveryForm";
 import { PaymentMethod } from "../types/payment.type";
 
-// Componentes de UI compartidos
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
@@ -71,7 +70,6 @@ export default function CreateOrderModal({
 
   const [loading, setLoading] = useState(false);
 
-  // Cálculos financieros en tiempo real
   const totalOrden = items.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0,
@@ -359,7 +357,8 @@ export default function CreateOrderModal({
                   <h3 className="font-bold text-[#472D20] text-xs uppercase tracking-wider">
                     Dirección de Destino
                   </h3>
-                  <DeliveryForm onChange={(data) => setDeliveryData(data)} />
+                  {/* El callback del Form actualiza el estado local correctamente */}
+                  <DeliveryForm onChange={setDeliveryData} />
                 </div>
               )}
             </div>
@@ -439,7 +438,6 @@ export default function CreateOrderModal({
               )}
             </div>
 
-            {/* SECCIÓN ANTICIPO */}
             <div className="border border-[#EFE9DD] rounded-xl p-4 bg-[#FAF6F0]">
               <p className="text-xs font-bold uppercase text-stone-500 tracking-wider mb-3">
                 Gestión de Anticipos Financieros
@@ -466,7 +464,6 @@ export default function CreateOrderModal({
                 </span>
               </div>
 
-              {/* Anticipo */}
               <div className="flex flex-col space-y-1 sm:border-r border-stone-100 pr-2">
                 <span className="text-xs font-bold uppercase text-stone-400 tracking-wider">
                   Anticipo Dejado

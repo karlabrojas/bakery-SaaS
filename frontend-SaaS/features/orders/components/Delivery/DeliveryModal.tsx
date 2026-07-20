@@ -43,11 +43,8 @@ export default function DeliveryModal({
         </div>
 
         <div className="p-6 space-y-6">
-          <DeliveryForm
-            initialData={delivery}
-            onChange={(data) => setLocalData(data)}
-            onSubmit={onSubmit}
-          />
+          {/* ⚡ Cambios aplicados: limpieza de props y simplificación de onChange */}
+          <DeliveryForm initialData={delivery} onChange={setLocalData} />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#EAD9B6]/40">
             <button

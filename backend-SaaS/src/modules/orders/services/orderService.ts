@@ -1,11 +1,12 @@
 import { supabase } from "../../../config/supabase";
-import { OrderStatus } from "../interfaces/delivery";
+import { DeliveryType, OrderStatus } from "../interfaces/delivery";
 import { PaymentStatus } from "../interfaces/paymentSummary";
 import {
   ChangeStatusDTO,
   CreateOrderDTO,
-  UpdateOrderDTO,
+  UpdateOrderDTO, //error
 } from "../dto/order.dto";
+import { DeliveryService } from "./deliveryService";
 
 export class OrderService {
   private static async generateFolio(idPanaderia: string): Promise<string> {
@@ -133,13 +134,17 @@ export class OrderService {
     if (errorProductos) throw errorProductos;
 
     let subtotal = 0;
+
     const items = datosDTO.items.map((item) => {
       const producto = productos.find((p) => p.id === item.productId);
-      if (!producto)
+
+      if (!producto) {
         throw new Error(`Producto ${item.productId} no encontrado`);
+      }
 
       const subtotalItem =
         Math.round(Number(producto.price) * item.quantity * 100) / 100;
+
       subtotal += subtotalItem;
 
       return {
@@ -152,22 +157,24 @@ export class OrderService {
     });
 
     subtotal = Math.round(subtotal * 100) / 100;
+
     const descuento = Math.round((datosDTO.discount ?? 0) * 100) / 100;
+
     const total = Math.round((subtotal - descuento) * 100) / 100;
 
-    let pedido = null;
-    let errorPedido = null;
+    let pedido: any = null;
+    let errorPedido: any = null;
+
     let intentos = 0;
     const maxIntentos = 5;
 
-    // Obtenemos el folio inicial desde la base de datos
     let folio = await this.generateFolio(idPanaderia);
 
     while (intentos < maxIntentos) {
       const { data, error } = await supabase
         .from("orders")
         .insert({
-          folio, // Usamos la variable mutable 'folio'
+          folio,
           bakery_id: idPanaderia,
           customer_id: datosDTO.customerId ?? null,
           status: OrderStatus.PENDING,
@@ -194,13 +201,13 @@ export class OrderService {
         if (esDuplicado) {
           intentos++;
 
-          // Fallback en memoria: incrementamos el folio manualmente saltándonos la colisión
           const match = folio.match(/\d+/);
           const numeroActual = match ? parseInt(match[0], 10) : intentos;
+
           folio = `PED-${String(numeroActual + 1).padStart(4, "0")}`;
 
-          // Espera exponencial corta antes de volver a intentar
           await new Promise((resolve) => setTimeout(resolve, 150 * intentos));
+
           errorPedido = error;
           continue;
         }
@@ -214,16 +221,19 @@ export class OrderService {
     }
 
     if (errorPedido || !pedido) {
-      console.error("Detalle del error original de Supabase:", errorPedido);
+      console.error(errorPedido);
+
       throw (
-        errorPedido ||
-        new Error(
-          "No se pudo generar un folio único para la orden debido a colisiones en la base de datos.",
-        )
+        errorPedido ??
+        new Error("No fue posible generar un folio para el pedido.")
       );
     }
 
-    const itemsPedido = items.map((item) => ({ ...item, order_id: pedido.id }));
+    const itemsPedido = items.map((item) => ({
+      ...item,
+      order_id: pedido.id,
+    }));
+
     const { error: errorItems } = await supabase
       .from("order_items")
       .insert(itemsPedido);
@@ -233,9 +243,37 @@ export class OrderService {
       throw errorItems;
     }
 
+    // ===============================
+    // Crear entrega
+    // ===============================
+
+    if (
+      datosDTO.deliveryType === DeliveryType.DELIVERY &&
+      datosDTO.deliveryData
+    ) {
+      await DeliveryService.createDelivery(
+        pedido.id,
+        {
+          orderId: pedido.id,
+          deliveryType: datosDTO.deliveryType,
+          address: datosDTO.deliveryData.address,
+          recipientName: datosDTO.deliveryData.recipientName,
+          recipientPhone: datosDTO.deliveryData.recipientPhone,
+          estimatedDelivery: datosDTO.deliveryData.estimatedDelivery,
+          notes: datosDTO.deliveryData.notes,
+        },
+        idPanaderia,
+      );
+    }
+
+    // ===============================
+    // Registrar anticipo
+    // ===============================
+
     if (datosDTO.initialAdvance && datosDTO.initialAdvance.amount > 0) {
       const anticipoMonto =
         Math.round(datosDTO.initialAdvance.amount * 100) / 100;
+
       if (anticipoMonto > total) {
         throw new Error(
           "El anticipo no puede ser mayor que el total del pedido",

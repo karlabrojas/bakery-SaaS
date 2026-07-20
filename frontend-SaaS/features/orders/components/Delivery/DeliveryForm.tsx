@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import { Delivery } from "../../types/delivery.type";
@@ -15,14 +16,33 @@ export default function DeliveryForm({
   onChange,
   onSubmit,
 }: DeliveryFormProps) {
+  // 1. Estado inicial adaptado completamente a camelCase con fallback seguro
   const [form, setForm] = useState({
     address: initialData?.address || "",
-    recipient_name: initialData?.recipient_name || "",
-    recipient_phone: initialData?.recipient_phone || "",
+    recipientName:
+      initialData?.recipientName ?? initialData?.recipient_name ?? "",
+    recipientPhone:
+      initialData?.recipientPhone ?? initialData?.recipient_phone ?? "",
     status: initialData?.status || "PENDING",
     notes: initialData?.notes || "",
   });
 
+  // 2. useEffect para actualizar el formulario cuando los datos asíncronos del GET cambien
+  useEffect(() => {
+    if (!initialData) return;
+
+    setForm({
+      address: initialData.address ?? "",
+      recipientName:
+        initialData.recipientName ?? initialData.recipient_name ?? "",
+      recipientPhone:
+        initialData.recipientPhone ?? initialData.recipient_phone ?? "",
+      status: initialData.status ?? "PENDING",
+      notes: initialData.notes ?? "",
+    });
+  }, [initialData]);
+
+  // 3. Función optimizada: Notifica el cambio al padre sin disparar el onSubmit continuo
   const change = (field: string, value: string) => {
     const updatedForm = { ...form, [field]: value };
     setForm(updatedForm);
@@ -30,14 +50,12 @@ export default function DeliveryForm({
     if (onChange) {
       onChange(updatedForm);
     }
-    if (onSubmit) {
-      onSubmit(updatedForm);
-    }
   };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
+        {/* Nombre del Destinatario en camelCase */}
         <div>
           <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
             Nombre del Destinatario *
@@ -45,11 +63,12 @@ export default function DeliveryForm({
           <Input
             required
             placeholder="Ej. Juan Pérez"
-            value={form.recipient_name}
-            onChange={(e) => change("recipient_name", e.target.value)}
+            value={form.recipientName}
+            onChange={(e) => change("recipientName", e.target.value)}
           />
         </div>
 
+        {/* Teléfono de Contacto en camelCase */}
         <div>
           <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
             Teléfono de Contacto *
@@ -57,12 +76,13 @@ export default function DeliveryForm({
           <Input
             required
             placeholder="Ej. 2381234567"
-            value={form.recipient_phone}
-            onChange={(e) => change("recipient_phone", e.target.value)}
+            value={form.recipientPhone}
+            onChange={(e) => change("recipientPhone", e.target.value)}
           />
         </div>
       </div>
 
+      {/* Dirección Exacta */}
       <div>
         <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
           Dirección Exacta *
@@ -76,6 +96,7 @@ export default function DeliveryForm({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
+        {/* Estado del Envío */}
         <div>
           <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
             Estado del Envío
@@ -92,6 +113,7 @@ export default function DeliveryForm({
           </Select>
         </div>
 
+        {/* Notas del Repartidor */}
         <div>
           <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
             Notas del Repartidor
