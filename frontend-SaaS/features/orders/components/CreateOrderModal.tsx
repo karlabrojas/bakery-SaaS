@@ -4,9 +4,11 @@ import React, { useState, useEffect } from "react";
 import DeliveryForm from "./Delivery/DeliveryForm";
 import { PaymentMethod } from "../types/payment.type";
 
-// 👇 Importación de tus nuevos componentes de Pago
+// Componentes de UI compartidos
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import AdvancePaymentForm from "./Payment/AdvancePaymentForm";
-import PaymentSummaryCard from "./Payment/PaymentSummaryCard";
 
 interface Product {
   id: string;
@@ -30,7 +32,7 @@ interface OrderItem {
 interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void | Promise<void>;
+  onSuccess: (payload: any) => void | Promise<void>;
   fetchProducts: () => Promise<Product[]>;
   fetchCustomers: () => Promise<Customer[]>;
   onCreateCustomer?: (name: string, phone: string) => Promise<Customer>;
@@ -48,7 +50,6 @@ export default function CreateOrderModal({
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<OrderItem[]>([]);
 
-  // Estados de control de la Orden (Delivery)
   const [deliveryType, setDeliveryType] = useState<"PICKUP" | "DELIVERY">(
     "PICKUP",
   );
@@ -56,7 +57,6 @@ export default function CreateOrderModal({
   const [deliveryTime, setDeliveryTime] = useState("");
   const [deliveryData, setDeliveryData] = useState<any>(null);
 
-  // 💳 Estados de Pago sincronizados con AdvancePaymentForm
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     PaymentMethod.CASH,
@@ -64,7 +64,6 @@ export default function CreateOrderModal({
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentObservations, setPaymentObservations] = useState("");
 
-  // Estados del Cliente Global
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
@@ -72,13 +71,13 @@ export default function CreateOrderModal({
 
   const [loading, setLoading] = useState(false);
 
-  // Calcular el total de la orden basándose en los productos seleccionados
+  // Cálculos financieros en tiempo real
   const totalOrden = items.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0,
   );
+  const restanteOrden = Math.max(0, totalOrden - paymentAmount);
 
-  // Cargar catálogos y resetear estados
   useEffect(() => {
     if (isOpen) {
       fetchProducts().then((data) => setProducts(data));
@@ -93,22 +92,12 @@ export default function CreateOrderModal({
       setIsCreatingCustomer(false);
       setNewCustomerName("");
       setNewCustomerPhone("");
-      // Reseteo de Payment
       setPaymentAmount(0);
       setPaymentMethod(PaymentMethod.CASH);
       setPaymentReference("");
       setPaymentObservations("");
     }
   }, [isOpen, fetchProducts, fetchCustomers]);
-
-  // Si el usuario no ha puesto un anticipo manualmente, podemos sugerir el total
-  // O dejarlo en 0 para que digite cuánto va a dejar de anticipo.
-  useEffect(() => {
-    if (totalOrden > 0 && paymentAmount === 0) {
-      // Opcional: Descomenta la línea de abajo si quieres que por defecto el anticipo sea el total
-      // setPaymentAmount(totalOrden);
-    }
-  }, [totalOrden]);
 
   if (!isOpen) return null;
 
@@ -186,6 +175,7 @@ export default function CreateOrderModal({
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (items.length === 0) {
       alert("Debes agregar al menos un producto.");
       return;
@@ -194,102 +184,93 @@ export default function CreateOrderModal({
       alert("Por favor completa la información de entrega.");
       return;
     }
+    if (paymentAmount > totalOrden) {
+      alert("El monto del anticipo no puede ser mayor al total de la orden.");
+      return;
+    }
 
     try {
       setLoading(true);
 
       const payload = {
+        customerId: selectedCustomerId || undefined,
         deliveryType,
         deliveryDate,
         deliveryTime,
-        customerId: selectedCustomerId || null,
+        notes: paymentObservations || undefined,
         items: items.map((i) => ({
           productId: i.productId,
           quantity: i.quantity,
         })),
-        total: totalOrden,
-        // Envió de la estructura de pago con anticipos
-        paymentData: {
-          advance: paymentAmount,
-          method: paymentMethod,
-          reference: paymentReference,
-          observations: paymentObservations,
-          remaining: Math.max(totalOrden - paymentAmount, 0),
-        },
-        ...(deliveryType === "DELIVERY"
-          ? {
-              deliveryData: {
-                ...deliveryData,
-                estimatedDelivery:
-                  deliveryDate && deliveryTime
-                    ? new Date(`${deliveryDate}T${deliveryTime}`).toISOString()
-                    : undefined,
-              },
-            }
-          : {}),
+        initialAdvance:
+          paymentAmount > 0
+            ? {
+                amount: Number(paymentAmount),
+                paymentMethod: paymentMethod,
+                reference: paymentReference || undefined,
+              }
+            : undefined,
+        deliveryData: deliveryType === "DELIVERY" ? deliveryData : undefined,
       };
 
-      console.log("Payload enviado a tu servicio:", payload);
-
-      await onSuccess();
-      onClose();
+      await onSuccess(payload);
     } catch (error) {
-      console.error("Error al crear la orden:", error);
+      console.error("Error al procesar el envío en el modal:", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Cabecera */}
-        <div className="p-6 border-b border-stone-100 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#472D20]">
-            Crear Nueva Orden
-          </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="relative bg-[#FFFDF9] rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        {/* Cabecera Fija */}
+        <div className="relative bg-[#472D20] px-6 py-5 rounded-t-2xl flex justify-between items-start sticky top-0 z-10">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Crear Nueva Orden</h2>
+            <p className="text-sm text-[#FBEACE] mt-1">
+              Completa la información para registrar el pedido en el sistema.
+            </p>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-600 transition p-1 rounded-lg hover:bg-stone-50"
+            className="text-white/70 hover:text-white text-xl font-bold p-1 rounded-lg transition"
           >
             ✕
           </button>
         </div>
 
-        {/* Formulario */}
+        {/* Cuerpo del Formulario */}
         <form
           onSubmit={handleFormSubmit}
-          className="flex-1 overflow-y-auto p-6 space-y-6"
+          className="flex-1 overflow-y-auto flex flex-col"
         >
-          {/* SECCIÓN DEL CLIENTE GLOBAL */}
-          <div className="border border-stone-200 rounded-xl p-4 bg-stone-50/40 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[#472D20] text-sm uppercase tracking-wider">
-                Información del Cliente
-              </h3>
-              {onCreateCustomer && (
-                <button
-                  type="button"
-                  onClick={() => setIsCreatingCustomer(!isCreatingCustomer)}
-                  className="text-xs font-bold text-[#472D20] hover:underline"
-                >
-                  {isCreatingCustomer
-                    ? "← Seleccionar existente"
-                    : "+ Nuevo cliente"}
-                </button>
-              )}
-            </div>
-
-            {!isCreatingCustomer ? (
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                  Seleccionar Cliente
+          <div className="space-y-6 p-6 flex-1">
+            {/* SECCIÓN CLIENTE */}
+            <div className="space-y-2 bg-[#FAF6F0] p-4 border border-[#EFE9DD] rounded-xl">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
+                  Información del Cliente
                 </label>
-                <select
+                {onCreateCustomer && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatingCustomer(!isCreatingCustomer)}
+                    className="text-xs font-bold text-[#472D20] hover:underline"
+                  >
+                    {isCreatingCustomer
+                      ? "← Seleccionar existente"
+                      : "+ Nuevo cliente"}
+                  </button>
+                )}
+              </div>
+
+              {!isCreatingCustomer ? (
+                <Select
                   value={selectedCustomerId}
                   onChange={(e) => setSelectedCustomerId(e.target.value)}
-                  className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white"
+                  className="w-full bg-white border border-stone-200 rounded-xl"
                 >
                   <option value="">Cliente General (Público general)</option>
                   {customers.map((c) => (
@@ -297,178 +278,252 @@ export default function CreateOrderModal({
                       {c.name} {c.phone ? `(${c.phone})` : ""}
                     </option>
                   ))}
-                </select>
-              </div>
-            ) : (
-              <div className="space-y-3 p-3 bg-white border border-stone-200 rounded-xl">
-                <p className="text-xs font-bold text-stone-500 uppercase">
-                  Nuevo Cliente Rápido
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Nombre completo *"
-                    value={newCustomerName}
-                    onChange={(e) => setNewCustomerName(e.target.value)}
-                    className="w-full border border-stone-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-[#472D20]"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Teléfono (Opcional)"
-                    value={newCustomerPhone}
-                    onChange={(e) => setNewCustomerPhone(e.target.value)}
-                    className="w-full border border-stone-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-[#472D20]"
+                </Select>
+              ) : (
+                <div className="space-y-3 p-3.5 bg-white border border-[#E6DEC9] rounded-xl shadow-sm">
+                  <p className="text-xs font-bold text-[#472D20] uppercase tracking-wider">
+                    Nuevo Cliente Rápido
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input
+                      type="text"
+                      placeholder="Nombre completo *"
+                      value={newCustomerName}
+                      onChange={(e) => setNewCustomerName(e.target.value)}
+                      className="w-full"
+                    />
+                    <Input
+                      type="tel"
+                      placeholder="Teléfono (Opcional)"
+                      value={newCustomerPhone}
+                      onChange={(e) => setNewCustomerPhone(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCreateCustomerFast}
+                    className="w-full h-10 text-sm font-bold bg-[#472D20] text-white rounded-xl hover:bg-[#362117] transition shadow-sm"
+                  >
+                    Guardar y Seleccionar
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* SECCIÓN DATOS DE ENTREGA */}
+            <div className="bg-[#FAF6F0] p-4 border border-[#EFE9DD] rounded-xl space-y-4">
+              <p className="text-xs font-bold uppercase text-stone-500 tracking-wider">
+                Logística de Entrega
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-stone-600">
+                    Tipo de entrega *
+                  </label>
+                  <Select
+                    value={deliveryType}
+                    onChange={(e) =>
+                      setDeliveryType(e.target.value as "PICKUP" | "DELIVERY")
+                    }
+                    className="w-full bg-white"
+                  >
+                    <option value="PICKUP">🏠 Recoger en tienda</option>
+                    <option value="DELIVERY">🚚 Envío a domicilio</option>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-stone-600">
+                    Fecha prometida *
+                  </label>
+                  <Input
+                    type="date"
+                    required
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    className="w-full bg-white"
                   />
                 </div>
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-stone-600">
+                    Hora prometida *
+                  </label>
+                  <Input
+                    type="time"
+                    required
+                    value={deliveryTime}
+                    onChange={(e) => setDeliveryTime(e.target.value)}
+                    className="w-full bg-white"
+                  />
+                </div>
+              </div>
+
+              {deliveryType === "DELIVERY" && (
+                <div className="border border-[#EFE9DD] rounded-xl p-4 bg-white shadow-sm space-y-2">
+                  <h3 className="font-bold text-[#472D20] text-xs uppercase tracking-wider">
+                    Dirección de Destino
+                  </h3>
+                  <DeliveryForm onChange={(data) => setDeliveryData(data)} />
+                </div>
+              )}
+            </div>
+
+            {/* SECCIÓN PRODUCTOS */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase text-stone-600 tracking-wider">
+                  Productos del Pedido
+                </label>
                 <button
                   type="button"
-                  onClick={handleCreateCustomerFast}
-                  className="w-full text-xs font-bold bg-[#472D20] text-white py-2 rounded-xl hover:bg-[#362117] transition"
+                  onClick={agregarProducto}
+                  className="h-9 px-4 text-xs font-bold bg-white text-[#472D20] border border-[#EFE9DD] rounded-xl hover:bg-[#FAF6F0] transition shadow-sm"
                 >
-                  Guardar y Seleccionar Cliente
+                  ＋ Agregar Producto
                 </button>
               </div>
-            )}
-          </div>
 
-          {/* Bloque de Tipo, Fecha y Hora */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                Tipo *
-              </label>
-              <select
-                value={deliveryType}
-                onChange={(e) =>
-                  setDeliveryType(e.target.value as "PICKUP" | "DELIVERY")
-                }
-                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition bg-white"
-              >
-                <option value="PICKUP">Recoger</option>
-                <option value="DELIVERY">Envío</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                Fecha *
-              </label>
-              <input
-                type="date"
-                required
-                value={deliveryDate}
-                onChange={(e) => setDeliveryDate(e.target.value)}
-                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">
-                Hora *
-              </label>
-              <input
-                type="time"
-                required
-                value={deliveryTime}
-                onChange={(e) => setDeliveryTime(e.target.value)}
-                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-              />
-            </div>
-          </div>
+              {items.length === 0 ? (
+                <p className="text-xs text-stone-400 text-center py-6 bg-stone-50 rounded-xl border border-dashed">
+                  No hay productos añadidos a esta orden.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white p-3 rounded-xl border border-[#EFE9DD] shadow-sm"
+                    >
+                      <div className="flex-1">
+                        <Select
+                          value={item.productId}
+                          onChange={(e) =>
+                            actualizarProducto(index, e.target.value)
+                          }
+                          className="w-full"
+                        >
+                          {products.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} (${p.price.toFixed(2)})
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
 
-          {/* Formulario de envío */}
-          {deliveryType === "DELIVERY" && (
-            <div className="border border-stone-200 rounded-xl p-4 bg-stone-50/50">
-              <h3 className="font-bold text-[#472D20] mb-3 text-sm uppercase tracking-wider">
-                Información de entrega
-              </h3>
-              <DeliveryForm onChange={(data) => setDeliveryData(data)} />
-            </div>
-          )}
+                      <div className="flex items-center justify-between gap-3 sm:justify-end">
+                        <div className="w-24">
+                          <Input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) =>
+                              actualizarCantidad(
+                                index,
+                                parseInt(e.target.value) || 1,
+                              )
+                            }
+                            className="w-full text-center font-bold"
+                          />
+                        </div>
 
-          {/* Sección de productos */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[#472D20] text-sm uppercase tracking-wider">
-                Productos
-              </h3>
-              <button
-                type="button"
-                onClick={agregarProducto}
-                className="text-xs font-bold bg-[#472D20] text-white px-3 py-1.5 rounded-lg hover:bg-[#362117] transition"
-              >
-                + Agregar producto
-              </button>
-            </div>
+                        <span className="text-sm font-bold text-[#472D20] w-24 text-right whitespace-nowrap">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </span>
 
-            {items.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 bg-stone-50 p-3 rounded-xl border border-stone-100"
-              >
-                <select
-                  value={item.productId}
-                  onChange={(e) => actualizarProducto(index, e.target.value)}
-                  className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:border-[#472D20]"
-                >
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} (${p.price})
-                    </option>
+                        <button
+                          type="button"
+                          onClick={() => eliminarProducto(index)}
+                          className="text-red-500 hover:bg-red-50 p-2 rounded-xl transition flex items-center justify-center border border-transparent hover:border-red-100"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </select>
+                </div>
+              )}
+            </div>
 
-                <input
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(e) =>
-                    actualizarCantidad(index, parseInt(e.target.value) || 1)
-                  }
-                  className="w-20 border border-stone-200 rounded-lg px-3 py-2 text-sm text-center outline-none focus:border-[#472D20]"
-                />
+            {/* SECCIÓN ANTICIPO */}
+            <div className="border border-[#EFE9DD] rounded-xl p-4 bg-[#FAF6F0]">
+              <p className="text-xs font-bold uppercase text-stone-500 tracking-wider mb-3">
+                Gestión de Anticipos Financieros
+              </p>
+              <AdvancePaymentForm
+                amount={paymentAmount}
+                setAmount={setPaymentAmount}
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                reference={paymentReference}
+                setReference={setPaymentReference}
+                observations={paymentObservations}
+                setObservations={setPaymentObservations}
+              />
+            </div>
 
-                <span className="text-sm font-semibold text-stone-700 w-24 text-right">
-                  ${(item.price * item.quantity).toFixed(2)}
+            {/* DESGLOSE FINANCIERO INTEGRADO */}
+            <div className="bg-white p-5 rounded-xl border border-[#EFE9DD] shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4 items-center text-center sm:text-left">
+              {/* Costo Total */}
+              <div className="flex flex-col space-y-1 sm:border-r border-stone-100 pr-2">
+                <span className="text-xs font-bold uppercase text-stone-400 tracking-wider">
+                  Costo Total
                 </span>
-
-                <button
-                  type="button"
-                  onClick={() => eliminarProducto(index)}
-                  className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition text-sm"
-                >
-                  🗑️
-                </button>
+                <span className="text-xl font-bold text-stone-800">
+                  ${totalOrden.toFixed(2)}
+                </span>
               </div>
-            ))}
+
+              {/* Anticipo */}
+              <div className="flex flex-col space-y-1 sm:border-r border-stone-100 pr-2">
+                <span className="text-xs font-bold uppercase text-stone-400 tracking-wider">
+                  Anticipo Dejado
+                </span>
+                <div>
+                  {paymentAmount > 0 ? (
+                    <span className="inline-block text-base font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-lg">
+                      -${paymentAmount.toFixed(2)}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-stone-400 italic">
+                      Sin anticipo
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Restante */}
+              <div className="flex flex-col space-y-1">
+                <span className="text-xs font-bold uppercase text-stone-400 tracking-wider">
+                  Saldo Restante
+                </span>
+                <div>
+                  {restanteOrden === 0 && totalOrden > 0 ? (
+                    <span className="inline-block text-xs font-bold text-emerald-600 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-md uppercase tracking-wider animate-pulse">
+                      ¡Liquidado! ✨
+                    </span>
+                  ) : (
+                    <span className="text-2xl font-black text-[#472D20]">
+                      ${restanteOrden.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* 💳 1. NUEVO FORMULARIO DE ANTICIPO */}
-          <AdvancePaymentForm
-            amount={paymentAmount}
-            setAmount={setPaymentAmount}
-            paymentMethod={paymentMethod}
-            setPaymentMethod={setPaymentMethod}
-            reference={paymentReference}
-            setReference={setPaymentReference}
-            observations={paymentObservations}
-            setObservations={setPaymentObservations}
-          />
-
-          {/* 📊 2. NUEVA TARJETA DE RESUMEN DE PAGO */}
-          <PaymentSummaryCard total={totalOrden} advance={paymentAmount} />
-
-          {/* Botones de acción */}
-          <div className="flex justify-end gap-3 pt-4">
+          {/* Acciones del Formulario Fijas */}
+          <div className="border-t border-stone-100 bg-stone-50/50 p-4 flex justify-end gap-3 sticky bottom-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-stone-200 text-stone-600 font-medium text-sm hover:bg-stone-50 transition"
+              className="px-5 py-2.5 border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-100 transition"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2.5 rounded-xl bg-[#472D20] text-white font-medium text-sm hover:bg-[#362117] transition disabled:opacity-50"
+              className="px-6 py-2.5 bg-[#472D20] text-white rounded-xl text-sm font-bold hover:bg-[#362117] disabled:opacity-60 disabled:cursor-not-allowed transition shadow-sm"
             >
               {loading ? "Creando..." : "Crear Orden"}
             </button>

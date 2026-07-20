@@ -1,3 +1,4 @@
+// features/orders/hooks/useOrders.ts
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,8 +6,9 @@ import {
   fetchOrders,
   deleteOrder,
   convertOrderToSale,
+  createOrder, // 👈 Importamos la función del servicio
 } from "../services/orders.service";
-import { Order } from "../types/order.type";
+import { Order, CreateOrderDTO } from "../types/order.type";
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -30,6 +32,22 @@ export function useOrders() {
     loadOrders();
   }, []);
 
+  // 🌟 NUEVA FUNCIÓN: Envía los datos al servicio y refresca la lista
+  const handleCreateOrder = async (orderData: CreateOrderDTO) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const newOrder = await createOrder(orderData);
+      await loadOrders(); // Actualiza la tabla automáticamente
+      return newOrder;
+    } catch (err: any) {
+      setError(err.message || "Error al crear el pedido");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     setLoading(true);
     try {
@@ -47,7 +65,7 @@ export function useOrders() {
     setLoadingConvert(true);
     try {
       await convertOrderToSale(id);
-      await loadOrders(); // Refresca la lista para ver el cambio de balance/status
+      await loadOrders();
     } catch (err: any) {
       setError(err.message || "Error al convertir pedido a venta");
       throw err;
@@ -62,6 +80,7 @@ export function useOrders() {
     error,
     loadingConvert,
     loadOrders,
+    handleCreateOrder, // 👈 Expuesto para el Modal
     handleDelete,
     handleConvertToSale,
   };

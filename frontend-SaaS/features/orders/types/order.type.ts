@@ -1,3 +1,5 @@
+import { PaymentMethod } from "./payment.type";
+
 export type OrderStatus =
   | "PENDING"
   | "CONFIRMED"
@@ -6,7 +8,7 @@ export type OrderStatus =
   | "DELIVERED"
   | "CANCELLED";
 
-export type DeliveryType = "PICKUP" | "DELIVERY";
+// export type DeliveryType = "PICKUP" | "DELIVERY";
 
 export interface OrderItem {
   id: string;
@@ -30,13 +32,59 @@ export interface Order {
   subtotal: number;
   discount: number;
   total: number;
-  payment_status: "PENDING" | "PARTIAL" | "PAID"; // Sincronizado con backend
-  remaining_balance: number; // Sincronizado con backend
+  payment_status: "PENDING" | "PARTIAL" | "PAID";
+  remaining_balance: number;
   notes?: string;
   created_by: string;
   created_at: string;
   updated_at: string;
   order_items: OrderItem[];
+}
+
+// 🌟 AGREGAMOS ESTAS DOS INTERFACES PARA DAR SOPORTE AL DTO
+
+export interface CreateAdvancePaymentDTO {
+  amount: number;
+  paymentMethod: PaymentMethod;
+  reference?: string;
+  notes?: string;
+}
+
+// export interface CreateDeliveryDTO {
+//   address: string;
+//   recipientName?: string;
+//   recipientPhone?: string;
+//   notes?: string;
+//   estimatedDelivery?: string; // Formato ISO String para las fechas
+// }
+
+// // 🌟 TU DTO ACTUALIZADO
+// export interface CreateOrderDTO {
+//   customerId?: string;
+//   deliveryType: DeliveryType;
+//   deliveryDate: string;
+//   deliveryTime: string;
+//   discount?: number;
+//   notes?: string;
+//   items: {
+//     productId: string;
+//     quantity: number;
+//     observations?: string;
+//   }[];
+
+//   // 👇 Agregamos los campos que te pide el Modal como opcionales (?)
+//   initialAdvance?: CreateAdvancePaymentDTO;
+//   deliveryData?: CreateDeliveryDTO;
+// }
+
+export type DeliveryType = "PICKUP" | "DELIVERY";
+
+export interface CreateDeliveryDTO {
+  address: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  notes?: string;
+  estimatedDelivery?: string;
 }
 
 export interface CreateOrderDTO {
@@ -51,4 +99,10 @@ export interface CreateOrderDTO {
     quantity: number;
     observations?: string;
   }[];
+  initialAdvance?: {
+    amount: number;
+    paymentMethod: any;
+    reference?: string;
+  };
+  deliveryData?: CreateDeliveryDTO; // 👈 Agregamos esto explícitamente
 }

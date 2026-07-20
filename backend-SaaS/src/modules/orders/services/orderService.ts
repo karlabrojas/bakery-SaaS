@@ -17,10 +17,15 @@ export class OrderService {
       .limit(1)
       .maybeSingle();
 
-    if (!ultimoPedido) return "PED-0001";
+    if (!ultimoPedido || !ultimoPedido.folio) {
+      return "PED-0001";
+    }
 
-    const ultimoNumero = parseInt(ultimoPedido.folio.replace("PED-", ""), 10);
-    const nuevoNumero = String(ultimoNumero + 1).padStart(4, "0");
+    const match = ultimoPedido.folio.match(/\d+/);
+    const ultimoNumero = match ? parseInt(match[0], 10) : 0;
+    const numeroValido = isNaN(ultimoNumero) ? 0 : ultimoNumero;
+
+    const nuevoNumero = String(numeroValido + 1).padStart(4, "0");
     return `PED-${nuevoNumero}`;
   }
 
@@ -49,9 +54,11 @@ export class OrderService {
 
     if (error) throw error;
 
-    const totalPagado =
+    const totalPagadoRaw =
       anticipos?.reduce((total, pago) => total + Number(pago.amount), 0) ?? 0;
-    const saldoPendiente = Number(pedido.total) - totalPagado;
+    const totalPagado = Math.round(totalPagadoRaw * 100) / 100;
+    const saldoPendiente =
+      Math.round((Number(pedido.total) - totalPagado) * 100) / 100;
 
     let estadoPago: PaymentStatus = PaymentStatus.PENDING;
     if (saldoPendiente <= 0) {
@@ -61,9 +68,9 @@ export class OrderService {
     }
 
     return {
-      total: Number(pedido.total),
+      total: Math.round(Number(pedido.total) * 100) / 100,
       paid: totalPagado,
-      remaining: saldoPendiente,
+      remaining: Math.max(0, saldoPendiente),
       status: estadoPago,
     };
   }
@@ -131,53 +138,105 @@ export class OrderService {
       if (!producto)
         throw new Error(`Producto ${item.productId} no encontrado`);
 
-      const subtotalItem = Number(producto.price) * item.quantity;
+      const subtotalItem =
+        Math.round(Number(producto.price) * item.quantity * 100) / 100;
       subtotal += subtotalItem;
 
       return {
         product_id: item.productId,
         quantity: item.quantity,
-        unit_price: producto.price,
+        unit_price: Number(producto.price),
         subtotal: subtotalItem,
         observations: item.observations ?? null,
       };
     });
 
-    const descuento = datosDTO.discount ?? 0;
-    const total = subtotal - descuento;
-    const folio = await this.generateFolio(idPanaderia);
+    subtotal = Math.round(subtotal * 100) / 100;
+    const descuento = Math.round((datosDTO.discount ?? 0) * 100) / 100;
+    const total = Math.round((subtotal - descuento) * 100) / 100;
 
-    const { data: pedido, error: errorPedido } = await supabase
-      .from("orders")
-      .insert({
-        folio,
-        bakery_id: idPanaderia,
-        customer_id: datosDTO.customerId ?? null,
-        status: OrderStatus.PENDING,
-        delivery_type: datosDTO.deliveryType,
-        delivery_date: datosDTO.deliveryDate,
-        delivery_time: datosDTO.deliveryTime,
-        subtotal,
-        discount: descuento,
-        total,
-        notes: datosDTO.notes ?? null,
-        created_by: idUsuario,
-        payment_status: PaymentStatus.PENDING,
-        remaining_balance: total,
-      })
-      .select()
-      .single();
+    let pedido = null;
+    let errorPedido = null;
+    let intentos = 0;
+    const maxIntentos = 5;
 
-    if (errorPedido) throw errorPedido;
+    // Obtenemos el folio inicial desde la base de datos
+    let folio = await this.generateFolio(idPanaderia);
+
+    while (intentos < maxIntentos) {
+      const { data, error } = await supabase
+        .from("orders")
+        .insert({
+          folio, // Usamos la variable mutable 'folio'
+          bakery_id: idPanaderia,
+          customer_id: datosDTO.customerId ?? null,
+          status: OrderStatus.PENDING,
+          delivery_type: datosDTO.deliveryType,
+          delivery_date: datosDTO.deliveryDate,
+          delivery_time: datosDTO.deliveryTime,
+          subtotal,
+          discount: descuento,
+          total,
+          notes: datosDTO.notes ?? null,
+          created_by: idUsuario,
+          payment_status: PaymentStatus.PENDING,
+          remaining_balance: total,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        const esDuplicado =
+          error.code === "23505" ||
+          error.message?.includes("duplicate key") ||
+          error.message?.includes("already exists");
+
+        if (esDuplicado) {
+          intentos++;
+
+          // Fallback en memoria: incrementamos el folio manualmente saltándonos la colisión
+          const match = folio.match(/\d+/);
+          const numeroActual = match ? parseInt(match[0], 10) : intentos;
+          folio = `PED-${String(numeroActual + 1).padStart(4, "0")}`;
+
+          // Espera exponencial corta antes de volver a intentar
+          await new Promise((resolve) => setTimeout(resolve, 150 * intentos));
+          errorPedido = error;
+          continue;
+        }
+
+        throw error;
+      }
+
+      pedido = data;
+      errorPedido = null;
+      break;
+    }
+
+    if (errorPedido || !pedido) {
+      console.error("Detalle del error original de Supabase:", errorPedido);
+      throw (
+        errorPedido ||
+        new Error(
+          "No se pudo generar un folio único para la orden debido a colisiones en la base de datos.",
+        )
+      );
+    }
 
     const itemsPedido = items.map((item) => ({ ...item, order_id: pedido.id }));
     const { error: errorItems } = await supabase
       .from("order_items")
       .insert(itemsPedido);
-    if (errorItems) throw errorItems;
+
+    if (errorItems) {
+      await supabase.from("orders").delete().eq("id", pedido.id);
+      throw errorItems;
+    }
 
     if (datosDTO.initialAdvance && datosDTO.initialAdvance.amount > 0) {
-      if (datosDTO.initialAdvance.amount > total) {
+      const anticipoMonto =
+        Math.round(datosDTO.initialAdvance.amount * 100) / 100;
+      if (anticipoMonto > total) {
         throw new Error(
           "El anticipo no puede ser mayor que el total del pedido",
         );
@@ -188,7 +247,7 @@ export class OrderService {
         .insert({
           order_id: pedido.id,
           bakery_id: idPanaderia,
-          amount: datosDTO.initialAdvance.amount,
+          amount: anticipoMonto,
           payment_method: datosDTO.initialAdvance.paymentMethod,
           reference: datosDTO.initialAdvance.reference ?? null,
           created_by: idUsuario,
@@ -219,21 +278,23 @@ export class OrderService {
 
     if (
       [OrderStatus.CANCELLED, OrderStatus.DELIVERED].includes(
-        pedidoExistente.status,
+        pedidoExistente.status as OrderStatus,
       )
     ) {
       throw new Error("No se puede editar un pedido cancelado o entregado");
     }
 
-    let subtotal = pedidoExistente.subtotal;
+    let subtotal = Math.round(Number(pedidoExistente.subtotal) * 100) / 100;
 
     if (datosDTO.items && datosDTO.items.length > 0) {
       const idsProductos = datosDTO.items.map((item) => item.productId);
-      const { data: productos } = await supabase
+      const { data: productos, error: errProd } = await supabase
         .from("products")
         .select("id, price")
         .in("id", idsProductos)
         .eq("bakery_id", idPanaderia);
+
+      if (errProd) throw errProd;
 
       subtotal = 0;
       const nuevosItems = datosDTO.items.map((item) => {
@@ -241,35 +302,53 @@ export class OrderService {
         if (!producto)
           throw new Error(`Producto ${item.productId} no encontrado`);
 
-        const subtotalItem = Number(producto.price) * item.quantity;
+        const subtotalItem =
+          Math.round(Number(producto.price) * item.quantity * 100) / 100;
         subtotal += subtotalItem;
 
         return {
           order_id: idPedido,
           product_id: item.productId,
           quantity: item.quantity,
-          unit_price: producto.price,
+          unit_price: Number(producto.price),
           subtotal: subtotalItem,
           observations: item.observations ?? null,
         };
       });
 
-      await supabase.from("order_items").delete().eq("order_id", idPedido);
-      await supabase.from("order_items").insert(nuevosItems);
+      subtotal = Math.round(subtotal * 100) / 100;
+
+      const { error: errorDel } = await supabase
+        .from("order_items")
+        .delete()
+        .eq("order_id", idPedido);
+      if (errorDel) throw errorDel;
+
+      const { error: errorIns } = await supabase
+        .from("order_items")
+        .insert(nuevosItems);
+      if (errorIns) throw errorIns;
     }
 
-    const descuento = datosDTO.discount ?? pedidoExistente.discount;
-    const total = subtotal - descuento;
+    const descuento =
+      Math.round(
+        (datosDTO.discount ?? Number(pedidoExistente.discount)) * 100,
+      ) / 100;
+    const total = Math.round((subtotal - descuento) * 100) / 100;
 
     const { data: pedidoActualizado, error } = await supabase
       .from("orders")
       .update({
-        customer_id: datosDTO.customerId ?? pedidoExistente.customer_id,
+        customer_id:
+          datosDTO.customerId !== undefined
+            ? datosDTO.customerId
+            : pedidoExistente.customer_id,
         delivery_type: datosDTO.deliveryType ?? pedidoExistente.delivery_type,
         delivery_date: datosDTO.deliveryDate ?? pedidoExistente.delivery_date,
         delivery_time: datosDTO.deliveryTime ?? pedidoExistente.delivery_time,
         discount: descuento,
-        notes: datosDTO.notes ?? pedidoExistente.notes,
+        notes:
+          datosDTO.notes !== undefined ? datosDTO.notes : pedidoExistente.notes,
         subtotal,
         total,
         updated_at: new Date().toISOString(),
@@ -288,10 +367,15 @@ export class OrderService {
   static async delete(idPedido: string, idPanaderia: string) {
     await this.getOrder(idPedido, idPanaderia);
 
-    await supabase.from("order_items").delete().eq("order_id", idPedido);
-    const { error } = await supabase.from("orders").delete().eq("id", idPedido);
+    const { error: errorItems } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("order_id", idPedido);
+    if (errorItems) throw errorItems;
 
+    const { error } = await supabase.from("orders").delete().eq("id", idPedido);
     if (error) throw error;
+
     return { message: "Pedido eliminado correctamente" };
   }
 
@@ -351,12 +435,14 @@ export class OrderService {
       throw new Error("Solo se pueden convertir pedidos en estado READY");
     }
 
+    const totalVenta = Math.round(Number(pedido.total) * 100) / 100;
+
     const { data: venta, error: errorVenta } = await supabase
       .from("sales")
       .insert({
         bakery_id: idPanaderia,
         customer_id: pedido.customer_id ?? null,
-        total_amount: Math.round(Number(pedido.total)), // Forzado a entero por tipo bigint en la BD
+        total_amount: totalVenta,
         payment_method: "cash",
       })
       .select()
@@ -368,15 +454,18 @@ export class OrderService {
       sale_id: venta.id,
       product_id: item.product_id,
       quantity: item.quantity,
-      price: Number(item.unit_price),
-      subtotal: Number(item.subtotal),
+      price: Math.round(Number(item.unit_price) * 100) / 100,
+      subtotal: Math.round(Number(item.subtotal) * 100) / 100,
     }));
 
     const { error: errorItems } = await supabase
       .from("sale_items")
       .insert(itemsVenta);
 
-    if (errorItems) throw errorItems;
+    if (errorItems) {
+      await supabase.from("sales").delete().eq("id", venta.id);
+      throw errorItems;
+    }
 
     await this.changeStatus(
       idPedido,

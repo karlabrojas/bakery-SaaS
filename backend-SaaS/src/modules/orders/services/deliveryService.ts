@@ -81,7 +81,19 @@ export class DeliveryService {
 
   static async getDelivery(idPedido: string, idPanaderia: string) {
     await OrderService.getOrder(idPedido, idPanaderia);
-    return await this.findDelivery(idPedido);
+
+    const { data, error } = await supabase
+      .from("deliveries")
+      .select("*")
+      .eq("order_id", idPedido)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error al obtener la logística:", error);
+      throw error;
+    }
+
+    return data;
   }
 
   static async updateDelivery(
