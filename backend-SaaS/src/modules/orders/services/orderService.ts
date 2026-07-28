@@ -405,13 +405,28 @@ export class OrderService {
   static async delete(idPedido: string, idPanaderia: string) {
     await this.getOrder(idPedido, idPanaderia);
 
+    const { error: errorHistorial } = await supabase
+      .from("order_status_history")
+      .delete()
+      .eq("order_id", idPedido);
+    if (errorHistorial) throw errorHistorial;
+
+    const { error: errorDeliveries } = await supabase
+      .from("deliveries")
+      .delete()
+      .eq("order_id", idPedido);
+    if (errorDeliveries) throw errorDeliveries;
+
     const { error: errorItems } = await supabase
       .from("order_items")
       .delete()
       .eq("order_id", idPedido);
     if (errorItems) throw errorItems;
 
-    const { error } = await supabase.from("orders").delete().eq("id", idPedido);
+    const { error } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", idPedido);
     if (error) throw error;
 
     return { message: "Pedido eliminado correctamente" };
