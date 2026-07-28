@@ -24,9 +24,12 @@ export class ProductService {
       .eq("is_active", true)
       .order("name");
     if (error) throw error;
-    return data.map((product: { imagen_path: string | null; }) => ({
+    return data.map((product: { imagen_path: string | null }) => ({
       ...product,
-      imageUrl: StorageService.getPublicUrl(product.imagen_path),
+      imageUrl: StorageService.getPublicUrl(
+        StorageService.BUCKETS.PRODUCTS,
+        product.imagen_path,
+      ),
     }));
   }
   static async getById(id: string, bakeryId: string) {
@@ -42,7 +45,10 @@ export class ProductService {
     }
     return {
       ...data,
-      imageUrl: StorageService.getPublicUrl(data.imagen_path),
+      imageUrl: StorageService.getPublicUrl(
+        StorageService.BUCKETS.PRODUCTS,
+        data.imagen_path,
+      ),
     };
   }
   static async create(
@@ -62,7 +68,11 @@ export class ProductService {
     }
     let imagePath: string | null = null;
     if (file) {
-      imagePath = await StorageService.uploadProductImage(file);
+      imagePath = await StorageService.uploadImage(
+        file,
+        StorageService.BUCKETS.PRODUCTS,
+        StorageService.FOLDERS.PRODUCTS,
+      );
     }
     const { data, error } = await supabase
       .from("products")
@@ -79,17 +89,22 @@ export class ProductService {
       .single();
     if (error) {
       if (imagePath) {
-        await StorageService.deleteImage(imagePath);
+        await StorageService.deleteImage(
+          StorageService.BUCKETS.PRODUCTS,
+          imagePath,
+        );
       }
       throw error;
     }
     return {
       ...data,
-      imageUrl: StorageService.getPublicUrl(data.imagen_path),
+      imageUrl: StorageService.getPublicUrl(
+        StorageService.BUCKETS.PRODUCTS,
+        data.imagen_path,
+      ),
     };
   }
 
-  //****   */
   static async update(
     id: string,
     bakeryId: string,
@@ -121,7 +136,12 @@ export class ProductService {
     }
     let imagePath = product.imagen_path;
     if (file) {
-      imagePath = await StorageService.replaceImage(product.imagen_path, file);
+      imagePath = await StorageService.replaceImage(
+        StorageService.BUCKETS.PRODUCTS,
+        StorageService.FOLDERS.PRODUCTS,
+        product.imagen_path,
+        file,
+      );
     }
     const { data, error: updateError } = await supabase
       .from("products")
@@ -138,7 +158,10 @@ export class ProductService {
     }
     return {
       ...data,
-      imageUrl: StorageService.getPublicUrl(data.imagen_path),
+      imageUrl: StorageService.getPublicUrl(
+        StorageService.BUCKETS.PRODUCTS,
+        data.imagen_path,
+      ),
     };
   }
   static async delete(id: string, bakeryId: string) {
@@ -164,7 +187,10 @@ export class ProductService {
     if (error || !product) throw new Error("Producto no encontrado.");
 
     if (product.imagen_path) {
-      await StorageService.deleteImage(product.imagen_path);
+      await StorageService.deleteImage(
+        StorageService.BUCKETS.PRODUCTS,
+        product.imagen_path,
+      );
     }
 
     const { error: deleteError } = await supabase
@@ -190,7 +216,10 @@ export class ProductService {
 
     return data.map((product: { imagen_path: string | null }) => ({
       ...product,
-      imageUrl: StorageService.getPublicUrl(product.imagen_path),
+      imageUrl: StorageService.getPublicUrl(
+        StorageService.BUCKETS.PRODUCTS,
+        product.imagen_path,
+      ),
     }));
   }
 
