@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Order } from "../types/order.type";
-import { updateOrder } from "../services/orders.service";
+import { changeOrderStatus, updateOrder } from "../services/orders.service";
 
 interface EditOrderModalProps {
   isOpen: boolean;
@@ -45,12 +45,15 @@ export default function EditOrderModal({
       setError("");
 
       await updateOrder(order.id, {
-        status,
         deliveryType: deliveryType,
         deliveryDate: deliveryDate,
         deliveryTime: deliveryTime,
         notes,
       });
+
+      if (status !== order.status) {
+        await changeOrderStatus(order.id, status);
+      }
 
       await onSuccess();
       onClose();
