@@ -16,6 +16,7 @@ export class InventoryService {
         name: string;
         quantity: number;
         unit: string;
+        minimum_stock?: number;
     }) {
         const { data: ingredient, error } = await supabase
             .from("inventory")
@@ -24,6 +25,7 @@ export class InventoryService {
                 name: data.name,
                 quantity: data.quantity,
                 unit: data.unit,
+                minimum_stock: data.minimum_stock ?? 0,
             })
             .select()
             .single();
@@ -36,6 +38,7 @@ export class InventoryService {
         name?: string;
         quantity?: number;
         unit?: string;
+        minimum_stock?: number;
     }) {
         const { data: ingredient, error } = await supabase
             .from("inventory")
@@ -47,5 +50,16 @@ export class InventoryService {
 
         if (error) throw error;
         return ingredient;
+    }
+
+    static async delete(id: string, bakeryId: string) {
+        const { error } = await supabase
+            .from("inventory")
+            .delete()
+            .eq("id", id)
+            .eq("bakery_id", bakeryId);
+
+        if (error) throw error;
+        return { message: "Ingrediente eliminado correctamente" };
     }
 }
