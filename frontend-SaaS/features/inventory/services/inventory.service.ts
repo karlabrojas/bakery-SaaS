@@ -35,7 +35,7 @@ export async function actualizarIngrediente(id: string, datos: {
     unit?: string;
     minimum_stock?: number;
 }) {
-    console.log("Datos enviados al backend:", datos); 
+    console.log("Datos enviados al backend:", datos);
 
     const respuesta = await fetch(`${api}/api/inventory/${id}`, {
         method: "PUT",
@@ -57,5 +57,24 @@ export async function eliminarIngrediente(id: string) {
     });
     const json = await respuesta.json();
     if (!respuesta.ok) throw new Error(json.message || "Error al eliminar ingrediente");
+    return json.data;
+}
+
+export async function registrarEntrada(datos: {
+    inventory_id: number;
+    quantity: number;
+    reason?: string;
+    movement_date: string;
+}) {
+    const respuesta = await fetch(`${api}/api/inventory/movements`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(datos),
+    });
+    const json = await respuesta.json();
+    if (!respuesta.ok) throw new Error(json.message || "Error al registrar entrada");
     return json.data;
 }

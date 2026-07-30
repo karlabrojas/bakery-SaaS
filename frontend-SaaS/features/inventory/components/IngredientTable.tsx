@@ -6,9 +6,10 @@ import { Ingredient } from "../types/inventory.type";
 import IngredientModal from "./IngredientModal";
 import SearchInput from "@/components/ui/SearchInput";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import EntradaModal from "./EntradaModal";
 
 export function IngredientTable() {
-  const { ingredientes, cargando, error, cargarIngredientes, handleCrear, handleActualizar, handleEliminar } = useIngredientes();
+  const { ingredientes, cargando, error, cargarIngredientes, handleCrear, handleActualizar, handleEliminar, handleEntrada } = useIngredientes();
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState<Ingredient | null>(null);
@@ -17,6 +18,8 @@ export function IngredientTable() {
   const [eliminando, setEliminando] = useState<Ingredient | null>(null);
   const [loadingEliminar, setLoadingEliminar] = useState(false);
   const [errorEliminar, setErrorEliminar] = useState("");
+
+  const [entrada, setEntrada] = useState<Ingredient | null>(null);
 
   const handleConfirmarEliminar = async () => {
     if (!eliminando) return;
@@ -94,7 +97,7 @@ export function IngredientTable() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`font-bold ${ingrediente.quantity <= ingrediente.minimum_stock
-                      ? "text-red-500"  
+                      ? "text-red-500"
                       : "text-stone-800"
                       }`}>
                       {ingrediente.minimum_stock}
@@ -120,6 +123,13 @@ export function IngredientTable() {
                       Eliminar
                     </button>
 
+                    <button
+                      onClick={() => setEntrada(ingrediente)}
+                      className="px-3 py-1.5 text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors border border-blue-200"
+                    >
+                      + Entrada
+                    </button>
+
                   </td>
                 </tr>
               ))
@@ -132,7 +142,7 @@ export function IngredientTable() {
         isOpen={modalAbierto}
         onClose={() => { setModalAbierto(false); setEditando(null); }}
         onSuccess={() => {
-          setModalAbierto(false); 
+          setModalAbierto(false);
           setEditando(null);
           cargarIngredientes();
         }}
@@ -151,6 +161,14 @@ export function IngredientTable() {
         error={errorEliminar}
         onClose={() => { setEliminando(null); setErrorEliminar(""); }}
         onConfirm={handleConfirmarEliminar}
+      />
+
+      <EntradaModal
+        isOpen={!!entrada}
+        onClose={() => setEntrada(null)}
+        onSuccess={cargarIngredientes}
+        ingrediente={entrada}
+        onEntrada={handleEntrada}
       />
     </>
   );
