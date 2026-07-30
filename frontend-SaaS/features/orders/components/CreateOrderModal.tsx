@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import DeliveryForm from "./Delivery/DeliveryForm";
 import { PaymentMethod } from "../types/payment.type";
 
-// Componentes de UI compartidos
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
@@ -71,7 +70,6 @@ export default function CreateOrderModal({
 
   const [loading, setLoading] = useState(false);
 
-  // Cálculos financieros en tiempo real
   const totalOrden = items.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0,
@@ -224,7 +222,6 @@ export default function CreateOrderModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="relative bg-[#FFFDF9] rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-        {/* Cabecera Fija */}
         <div className="relative bg-[#472D20] px-6 py-5 rounded-t-2xl flex justify-between items-start sticky top-0 z-10">
           <div>
             <h2 className="text-2xl font-bold text-white">Crear Nueva Orden</h2>
@@ -241,13 +238,11 @@ export default function CreateOrderModal({
           </button>
         </div>
 
-        {/* Cuerpo del Formulario */}
         <form
           onSubmit={handleFormSubmit}
           className="flex-1 overflow-y-auto flex flex-col"
         >
           <div className="space-y-6 p-6 flex-1">
-            {/* SECCIÓN CLIENTE */}
             <div className="space-y-2 bg-[#FAF6F0] p-4 border border-[#EFE9DD] rounded-xl">
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
@@ -311,7 +306,6 @@ export default function CreateOrderModal({
               )}
             </div>
 
-            {/* SECCIÓN DATOS DE ENTREGA */}
             <div className="bg-[#FAF6F0] p-4 border border-[#EFE9DD] rounded-xl space-y-4">
               <p className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                 Logística de Entrega
@@ -363,12 +357,12 @@ export default function CreateOrderModal({
                   <h3 className="font-bold text-[#472D20] text-xs uppercase tracking-wider">
                     Dirección de Destino
                   </h3>
-                  <DeliveryForm onChange={(data) => setDeliveryData(data)} />
+                  {/* El callback del Form actualiza el estado local correctamente */}
+                  <DeliveryForm onChange={setDeliveryData} />
                 </div>
               )}
             </div>
 
-            {/* SECCIÓN PRODUCTOS */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase text-stone-600 tracking-wider">
@@ -444,7 +438,6 @@ export default function CreateOrderModal({
               )}
             </div>
 
-            {/* SECCIÓN ANTICIPO */}
             <div className="border border-[#EFE9DD] rounded-xl p-4 bg-[#FAF6F0]">
               <p className="text-xs font-bold uppercase text-stone-500 tracking-wider mb-3">
                 Gestión de Anticipos Financieros
@@ -461,9 +454,7 @@ export default function CreateOrderModal({
               />
             </div>
 
-            {/* DESGLOSE FINANCIERO INTEGRADO */}
             <div className="bg-white p-5 rounded-xl border border-[#EFE9DD] shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4 items-center text-center sm:text-left">
-              {/* Costo Total */}
               <div className="flex flex-col space-y-1 sm:border-r border-stone-100 pr-2">
                 <span className="text-xs font-bold uppercase text-stone-400 tracking-wider">
                   Costo Total
@@ -473,7 +464,6 @@ export default function CreateOrderModal({
                 </span>
               </div>
 
-              {/* Anticipo */}
               <div className="flex flex-col space-y-1 sm:border-r border-stone-100 pr-2">
                 <span className="text-xs font-bold uppercase text-stone-400 tracking-wider">
                   Anticipo Dejado
@@ -491,7 +481,6 @@ export default function CreateOrderModal({
                 </div>
               </div>
 
-              {/* Restante */}
               <div className="flex flex-col space-y-1">
                 <span className="text-xs font-bold uppercase text-stone-400 tracking-wider">
                   Saldo Restante
@@ -511,7 +500,6 @@ export default function CreateOrderModal({
             </div>
           </div>
 
-          {/* Acciones del Formulario Fijas */}
           <div className="border-t border-stone-100 bg-stone-50/50 p-4 flex justify-end gap-3 sticky bottom-0">
             <button
               type="button"

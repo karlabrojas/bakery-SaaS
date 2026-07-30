@@ -14,7 +14,6 @@ const statusConfig: Record<OrderStatus, { label: string; className: string }> =
   };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  // Fallback por si 'status' no coincide con ninguna clave (seguridad en runtime)
   const config = statusConfig[status] || {
     label: status || "Desconocido",
     className: "bg-stone-100 text-stone-500",

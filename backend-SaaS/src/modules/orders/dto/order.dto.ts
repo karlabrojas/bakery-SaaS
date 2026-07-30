@@ -1,10 +1,19 @@
 import { PaymentMethod } from "../interfaces/advancePayment";
 import { DeliveryType, OrderStatus } from "../interfaces/delivery";
 
+
 export interface CreateOrderItemDTO {
   productId: string;
   quantity: number;
   observations?: string;
+}
+
+export interface CreateDeliveryDataDTO {
+  address?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  estimatedDelivery?: string;
+  notes?: string;
 }
 
 export interface CreateOrderDTO {
@@ -21,6 +30,7 @@ export interface CreateOrderDTO {
     paymentMethod: PaymentMethod;
     reference?: string;
   };
+  deliveryData?: CreateDeliveryDataDTO;
 }
 
 export interface UpdateOrderDTO {

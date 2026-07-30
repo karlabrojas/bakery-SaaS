@@ -1,6 +1,5 @@
 const api = process.env.NEXT_PUBLIC_API_URL;
 
-// Definimos la interfaz para mantener limpio el tipado
 export interface Customer {
   id: string;
   name: string;
@@ -22,7 +21,6 @@ export async function fetchCustomers(): Promise<Customer[]> {
   return json.data;
 }
 
-// 🛠️ Ajustado para recibir (name, phone) directamente como lo pide el modal
 export async function createCustomer(
   name: string,
   phone: string,
@@ -33,7 +31,7 @@ export async function createCustomer(
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify({ name, phone }), // 👈 Se empaqueta aquí dentro en el formato JSON que espera tu API
+    body: JSON.stringify({ name, phone }),
   });
 
   const json = await res.json();

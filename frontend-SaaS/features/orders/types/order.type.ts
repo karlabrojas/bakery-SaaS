@@ -8,7 +8,7 @@ export type OrderStatus =
   | "DELIVERED"
   | "CANCELLED";
 
-// export type DeliveryType = "PICKUP" | "DELIVERY";
+export type DeliveryType = "PICKUP" | "DELIVERY";
 
 export interface OrderItem {
   id: string;
@@ -41,43 +41,12 @@ export interface Order {
   order_items: OrderItem[];
 }
 
-// 🌟 AGREGAMOS ESTAS DOS INTERFACES PARA DAR SOPORTE AL DTO
-
 export interface CreateAdvancePaymentDTO {
   amount: number;
   paymentMethod: PaymentMethod;
   reference?: string;
   notes?: string;
 }
-
-// export interface CreateDeliveryDTO {
-//   address: string;
-//   recipientName?: string;
-//   recipientPhone?: string;
-//   notes?: string;
-//   estimatedDelivery?: string; // Formato ISO String para las fechas
-// }
-
-// // 🌟 TU DTO ACTUALIZADO
-// export interface CreateOrderDTO {
-//   customerId?: string;
-//   deliveryType: DeliveryType;
-//   deliveryDate: string;
-//   deliveryTime: string;
-//   discount?: number;
-//   notes?: string;
-//   items: {
-//     productId: string;
-//     quantity: number;
-//     observations?: string;
-//   }[];
-
-//   // 👇 Agregamos los campos que te pide el Modal como opcionales (?)
-//   initialAdvance?: CreateAdvancePaymentDTO;
-//   deliveryData?: CreateDeliveryDTO;
-// }
-
-export type DeliveryType = "PICKUP" | "DELIVERY";
 
 export interface CreateDeliveryDTO {
   address: string;
@@ -99,10 +68,20 @@ export interface CreateOrderDTO {
     quantity: number;
     observations?: string;
   }[];
-  initialAdvance?: {
-    amount: number;
-    paymentMethod: any;
-    reference?: string;
-  };
-  deliveryData?: CreateDeliveryDTO; // 👈 Agregamos esto explícitamente
+  initialAdvance?: CreateAdvancePaymentDTO;
+  deliveryData?: CreateDeliveryDTO;
+}
+
+export interface UpdateOrderDTO {
+  status?: OrderStatus;
+  notes?: string;
+
+  deliveryType?: DeliveryType;
+  delivery_type?: DeliveryType;
+
+  deliveryDate?: string;
+  delivery_date?: string;
+
+  deliveryTime?: string;
+  delivery_time?: string;
 }

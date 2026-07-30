@@ -23,24 +23,23 @@ export default function DeliveryCard({
   };
 
   return (
-    // Se fuerza rounded-2xl, fondo blanco e hilos de la app
     <Card className="bg-white p-6 rounded-2xl border border-[#EAD9B6]/40 shadow-sm space-y-5">
       <div className="flex justify-between items-center border-b border-stone-100 pb-3">
         <h3 className="text-xl font-bold text-[#472D20] flex items-center gap-2">
           <span>🚚</span> Detalles de Entrega
         </h3>
-        {/* Usamos el badge estilizado dinámico */}
         <DeliveryStatusBadge status={delivery.status} />
       </div>
 
       <div className="space-y-3 text-stone-700 text-sm md:text-base">
+        {/* ⚡ Renderizado seguro multiformato */}
         <p>
           <strong className="text-[#472D20]">Destinatario:</strong>{" "}
-          {delivery.recipient_name}
+          {(delivery as any).recipientName ?? delivery.recipient_name}
         </p>
         <p>
           <strong className="text-[#472D20]">Teléfono:</strong>{" "}
-          {delivery.recipient_phone}
+          {(delivery as any).recipientPhone ?? delivery.recipient_phone}
         </p>
         <p>
           <strong className="text-[#472D20]">Dirección:</strong>{" "}
@@ -49,7 +48,10 @@ export default function DeliveryCard({
         <p>
           <strong className="text-[#472D20]">Entrega Estimada:</strong>{" "}
           <span className="bg-[#FAF6E9] px-2 py-0.5 rounded text-[#472D20] font-medium text-sm">
-            {formatDateTime(delivery.estimated_delivery)}
+            {formatDateTime(
+              (delivery as any).estimatedDelivery ??
+                delivery.estimated_delivery,
+            )}
           </span>
         </p>
         {delivery.delivery_at && (

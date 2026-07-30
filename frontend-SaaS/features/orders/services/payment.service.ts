@@ -9,9 +9,6 @@ const api = process.env.NEXT_PUBLIC_API_URL;
 
 const getToken = () => localStorage.getItem("accessToken");
 
-/**
- * Registrar anticipo
- */
 export async function registerAdvance(
   orderId: string,
   data: RegisterAdvanceDTO,
@@ -34,9 +31,6 @@ export async function registerAdvance(
   return json.data;
 }
 
-/**
- * Obtener anticipos
- */
 export async function fetchAdvances(
   orderId: string,
 ): Promise<AdvancePayment[]> {
@@ -55,9 +49,6 @@ export async function fetchAdvances(
   return json.data;
 }
 
-/**
- * Obtener resumen de pagos
- */
 export async function fetchPaymentSummary(
   orderId: string,
 ): Promise<PaymentSummary> {
@@ -76,9 +67,6 @@ export async function fetchPaymentSummary(
   return json.data;
 }
 
-/**
- * Registrar pago restante
- */
 export async function payRemaining(
   orderId: string,
   data: FinalPaymentDTO,

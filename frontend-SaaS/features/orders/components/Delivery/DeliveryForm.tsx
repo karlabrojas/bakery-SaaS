@@ -1,107 +1,104 @@
 "use client";
-import { useState } from "react";
-import Input from "@/components/ui/Input";
-import Select from "@/components/ui/Select";
-import { Delivery } from "../../types/delivery.type";
 
-interface DeliveryFormProps {
-  initialData?: Delivery | null;
-  onChange?: (data: any) => void;
-  onSubmit?: (data: any) => void;
+import { useEffect, useState } from "react";
+
+interface FormProps {
+  initialData?: any;
+  onChange: (data: any) => void;
 }
 
-export default function DeliveryForm({
-  initialData,
-  onChange,
-  onSubmit,
-}: DeliveryFormProps) {
-  // 🛠️ REGRESAMOS A SNAKE_CASE: Para coincidir al 100% con tu interfaz Delivery real
-  const [form, setForm] = useState({
-    address: initialData?.address || "",
-    recipient_name: initialData?.recipient_name || "",
-    recipient_phone: initialData?.recipient_phone || "",
-    status: initialData?.status || "PENDING",
-    notes: initialData?.notes || "",
+export default function DeliveryForm({ initialData, onChange }: FormProps) {
+  const [formData, setFormData] = useState({
+    name: initialData?.name || "karla beatriz",
+    phone: initialData?.phone || "2381235425",
+    address: initialData?.address || "Privada 8 norte 1004",
+    status: initialData?.status || "Pendiente",
+    notes: initialData?.notes || "Casa grande con arbol enfrente",
   });
 
-  const change = (field: string, value: string) => {
-    const updatedForm = { ...form, [field]: value };
-    setForm(updatedForm);
+  useEffect(() => {
+    onChange(formData);
+  }, [formData, onChange]);
 
-    if (onChange) {
-      onChange(updatedForm);
-    }
-    if (onSubmit) {
-      onSubmit(updatedForm);
-    }
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
-            Nombre del Recipiente *
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold uppercase text-[#472D20] tracking-wider">
+            Nombre del destinatario *
           </label>
-          <Input
-            required
-            placeholder="Ej. Juan Pérez"
-            value={form.recipient_name}
-            onChange={(e) => change("recipient_name", e.target.value)}
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full bg-[#faefdf] border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
-            Teléfono de Contacto *
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold uppercase text-[#472D20] tracking-wider">
+            Teléfono de contacto *
           </label>
-          <Input
-            required
-            placeholder="Ej. 5512345678"
-            value={form.recipient_phone}
-            onChange={(e) => change("recipient_phone", e.target.value)}
+          <input
+            type="text"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            className="w-full bg-[#faefdf] border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
           />
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
-          Dirección Exacta *
-        </label>
-        <Input
-          required
-          placeholder="Calle, Número, Colonia..."
-          value={form.address}
-          onChange={(e) => change("address", e.target.value)}
-        />
-      </div>
+      <div className="grid grid-cols-2 gap-4 items-stretch">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase text-[#472D20] tracking-wider">
+              Dirección exacta *
+            </label>
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              className="w-full bg-[#faefdf] border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
+            />
+          </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
-            Estado del Envío
-          </label>
-          <Select
-            value={form.status}
-            onChange={(e) => change("status", e.target.value)}
-          >
-            {/* 🛠️ Restaurados los estados exactos de tu DeliveryStatus */}
-            <option value="PENDING">Pendiente</option>
-            <option value="ASSIGNED">Asignada</option>
-            <option value="IN_ROUTE">En ruta</option>
-            <option value="DELIVERED">Entregada</option>
-            <option value="CANCELLED">Cancelada</option>
-          </Select>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase text-[#472D20] tracking-wider">
+              Estado del envío
+            </label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full bg-white border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
+            >
+              <option value="Pendiente">Pendiente</option>
+              <option value="En Ruta">En Ruta</option>
+              <option value="Entregado">Entregado</option>
+            </select>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold text-[#472D20] uppercase tracking-wider mb-1">
-            Notas del Repartidor
+        <div className="flex flex-col gap-1.5 h-full">
+          <label className="text-[10px] font-bold uppercase text-[#472D20] tracking-wider">
+            Notas del repartidor
           </label>
-          <Input
-            placeholder="Indicaciones adicionales..."
-            value={form.notes}
-            onChange={(e) => change("notes", e.target.value)}
+          <textarea
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            className="w-full h-full min-h-[90px] flex-1 resize-none bg-[#faefdf] border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
           />
         </div>
       </div>
