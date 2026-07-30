@@ -221,32 +221,7 @@ export function OrdersTable() {
         onClose={() => setModalCrear(false)}
         onSuccess={async (payload) => {
           try {
-            const response = await handleCreateOrder(payload);
-
-            if (payload.deliveryType === "DELIVERY" && payload.deliveryData) {
-              const orderId = (response as any)?.data?.id || response?.id;
-              if (!orderId) {
-                throw new Error(
-                  "No se pudo obtener el ID de la orden creada para el envío.",
-                );
-              }
-
-              const estimatedDeliveryIso =
-                payload.deliveryDate && payload.deliveryTime
-                  ? new Date(
-                      `${payload.deliveryDate}T${payload.deliveryTime}`,
-                    ).toISOString()
-                  : new Date().toISOString();
-
-              await createDelivery(orderId, {
-                address: payload.deliveryData.address,
-                recipient_name: payload.deliveryData.recipient_name,
-                recipient_phone: payload.deliveryData.recipient_phone,
-                status: payload.deliveryData.status || "PENDING",
-                notes: payload.deliveryData.notes || "",
-                estimated_delivery: estimatedDeliveryIso as any,
-              });
-            }
+            await handleCreateOrder(payload);
 
             setModalCrear(false);
             loadOrders();

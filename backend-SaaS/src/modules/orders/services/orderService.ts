@@ -4,30 +4,31 @@ import { PaymentStatus } from "../interfaces/paymentSummary";
 import {
   ChangeStatusDTO,
   CreateOrderDTO,
-  UpdateOrderDTO, //error
+  UpdateOrderDTO,
 } from "../dto/order.dto";
 import { DeliveryService } from "./deliveryService";
 
 export class OrderService {
   private static async generateFolio(idPanaderia: string): Promise<string> {
-    const { data: ultimoPedido } = await supabase
+    const { data, error } = await supabase
       .from("orders")
       .select("folio")
-      .eq("bakery_id", idPanaderia)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .eq("bakery_id", idPanaderia);
 
-    if (!ultimoPedido || !ultimoPedido.folio) {
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
       return "PED-0001";
     }
 
-    const match = ultimoPedido.folio.match(/\d+/);
-    const ultimoNumero = match ? parseInt(match[0], 10) : 0;
-    const numeroValido = isNaN(ultimoNumero) ? 0 : ultimoNumero;
+    const ultimoNumero = Math.max(
+      ...data.map((p) => {
+        const match = p.folio.match(/\d+/);
+        return match ? parseInt(match[0], 10) : 0;
+      }),
+    );
 
-    const nuevoNumero = String(numeroValido + 1).padStart(4, "0");
-    return `PED-${nuevoNumero}`;
+    return `PED-${String(ultimoNumero + 1).padStart(4, "0")}`;
   }
 
   public static async getOrder(idPedido: string, idPanaderia: string) {
@@ -171,6 +172,11 @@ export class OrderService {
     let folio = await this.generateFolio(idPanaderia);
 
     while (intentos < maxIntentos) {
+      console.log("========================");
+      console.log("Panadería:", idPanaderia);
+      console.log("Folio:", folio);
+      console.log("========================");
+
       const { data, error } = await supabase
         .from("orders")
         .insert({
@@ -201,10 +207,7 @@ export class OrderService {
         if (esDuplicado) {
           intentos++;
 
-          const match = folio.match(/\d+/);
-          const numeroActual = match ? parseInt(match[0], 10) : intentos;
-
-          folio = `PED-${String(numeroActual + 1).padStart(4, "0")}`;
+          folio = await this.generateFolio(idPanaderia);
 
           await new Promise((resolve) => setTimeout(resolve, 150 * intentos));
 
@@ -242,10 +245,6 @@ export class OrderService {
       await supabase.from("orders").delete().eq("id", pedido.id);
       throw errorItems;
     }
-
-    // ===============================
-    // Crear entrega
-    // ===============================
 
     if (
       datosDTO.deliveryType === DeliveryType.DELIVERY &&
@@ -423,10 +422,7 @@ export class OrderService {
       .eq("order_id", idPedido);
     if (errorItems) throw errorItems;
 
-    const { error } = await supabase
-      .from("orders")
-      .delete()
-      .eq("id", idPedido);
+    const { error } = await supabase.from("orders").delete().eq("id", idPedido);
     if (error) throw error;
 
     return { message: "Pedido eliminado correctamente" };
