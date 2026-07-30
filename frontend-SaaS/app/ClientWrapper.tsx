@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import AppLayout from "@/components/layout/AppLayout";
+import { ProfileProvider } from "@/features/profile/context/ProfileContext";
 
 export default function ClientWrapper({
   children,
@@ -12,9 +13,13 @@ export default function ClientWrapper({
 
   const hideSidebar = pathname === "/" || pathname.startsWith("/auth");
 
-  return hideSidebar ? (
-    <main>{children}</main>
-  ) : (
-    <AppLayout>{children}</AppLayout>
+  return (
+    <ProfileProvider>
+      {hideSidebar ? (
+        <main>{children}</main>
+      ) : (
+        <AppLayout>{children}</AppLayout>
+      )}
+    </ProfileProvider>
   );
 }

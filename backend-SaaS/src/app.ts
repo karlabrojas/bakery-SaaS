@@ -5,7 +5,7 @@ import saleRoutes from "./modules/sales/routes/saleRoutes";
 import productRoutes from "./modules/products/routes/productRoutes";
 import authRoutes from "./modules/auth/routes/auth.routes";
 import customerRoutes from "./modules/customers/routes/customerRoutes";
-
+import profileRoutes from "./modules/profile/routes/profileRoutes";
 import { supabase } from "./config/supabase";
 import orderRoutes from "./modules/orders/routes/orderRoutes";
 import paymentRoutes from "./modules/orders/routes/paymentRoutes";
@@ -60,7 +60,7 @@ app.use("/api/sales", saleRoutes);
 app.use("/api/customers", customerRoutes);
 
 app.use("/api/orders", orderRoutes);
-
+app.use("/api/profile", profileRoutes);
 app.use("/api/orders/:id/payments", paymentRoutes);
 app.use("/api/orders/:id/delivery", deliveryRoutes);
 
