@@ -528,4 +528,65 @@ export class OrderService {
 
     return venta;
   }
+  static async countPendingOrders(bakeryId: string) {
+    const { count, error } = await supabase
+      .from("orders")
+      .select("*", {
+        count: "exact",
+        head: true,
+      })
+      .eq("bakery_id", bakeryId)
+      .eq("status", OrderStatus.PENDING);
+
+    if (error) throw error;
+
+    return count ?? 0;
+  }
+
+  static async getRecentOrders(bakeryId: string) {
+    const { data, error } = await supabase
+
+      .from("orders")
+
+      .select(
+        `
+            id,
+            folio,
+            total,
+            status,
+            delivery_date,
+            delivery_time,
+            customers (
+                id,
+                name
+            )
+        `,
+      )
+
+      .eq("bakery_id", bakeryId)
+
+      .order("created_at", {
+        ascending: false,
+      })
+
+      .limit(5);
+
+    if (error) throw error;
+
+    return data.map((order: any) => ({
+      id: order.id,
+
+      folio: order.folio,
+
+      customer: order.customers,
+
+      total: Number(order.total),
+
+      status: order.status,
+
+      deliveryDate: order.delivery_date,
+
+      deliveryTime: order.delivery_time,
+    }));
+  }
 }

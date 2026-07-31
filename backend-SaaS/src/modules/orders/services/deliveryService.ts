@@ -1,4 +1,5 @@
 import { supabase } from "../../../config/supabase";
+import { TodayDelivery } from "../../dashboard/interfaces/today-delivery.interface";
 import { CreateDeliveryDTO, UpdateDeliveryDTO } from "../dto/delivery.dto";
 import {
   DeliveryStatus,
@@ -192,5 +193,43 @@ export class DeliveryService {
 
     await this.updateOrderStatus(idPedido, OrderStatus.PENDING);
     return { message: "Entrega eliminada correctamente" };
+  }
+
+  static async getTodayDeliveries(bakeryId: string): Promise<TodayDelivery[]> {
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+
+    tomorrow.setDate(today.getDate() + 1);
+
+    const { data, error } = await supabase
+      .from("deliveries")
+      .select(
+        `
+      id,
+      order_id,
+      recipient_name,
+      address,
+      estimated_delivery,
+      status
+    `,
+      )
+      .eq("bakery_id", bakeryId)
+      .gte("estimated_delivery", today.toISOString())
+      .lt("estimated_delivery", tomorrow.toISOString())
+      .order("estimated_delivery");
+
+    if (error) throw error;
+
+    return (data ?? []).map((delivery) => ({
+      id: delivery.id,
+      orderId: delivery.order_id,
+      recipientName: delivery.recipient_name,
+      address: delivery.address,
+      estimatedDelivery: delivery.estimated_delivery,
+      status: delivery.status,
+    }));
   }
 }

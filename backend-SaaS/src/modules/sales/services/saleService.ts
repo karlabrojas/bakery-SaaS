@@ -226,4 +226,90 @@ export class SaleService {
 
     return true;
   }
+
+  static async getTodaySales(bakeryId: string) {
+    const start = new Date();
+
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date();
+
+    end.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from("sales")
+      .select("total_amount")
+      .eq("bakery_id", bakeryId)
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString());
+
+    if (error) throw error;
+
+    return (data ?? []).reduce(
+      (sum, sale) => sum + Number(sale.total_amount),
+      0,
+    );
+  }
+
+  static async getMonthlySales(bakeryId: string) {
+    const now = new Date();
+
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const { data, error } = await supabase
+      .from("sales")
+      .select("total_amount")
+      .eq("bakery_id", bakeryId)
+      .gte("created_at", firstDay.toISOString());
+
+    if (error) throw error;
+
+    return (data ?? []).reduce(
+      (sum, sale) => sum + Number(sale.total_amount),
+      0,
+    );
+  }
+
+  static async getLast7DaysSales(bakeryId: string) {
+    const start = new Date();
+
+    start.setDate(start.getDate() - 6);
+
+    start.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+      .from("sales")
+      .select("created_at,total_amount")
+      .eq("bakery_id", bakeryId)
+      .gte("created_at", start.toISOString())
+      .order("created_at");
+
+    if (error) throw error;
+
+    const grouped = new Map<string, number>();
+
+    data?.forEach((sale) => {
+      const day = sale.created_at.split("T")[0];
+
+      grouped.set(day, (grouped.get(day) ?? 0) + Number(sale.total_amount));
+    });
+
+    const result = [];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(start);
+
+      date.setDate(start.getDate() + i);
+
+      const key = date.toISOString().split("T")[0];
+
+      result.push({
+        date: key,
+
+        total: grouped.get(key) ?? 0,
+      });
+    }
+
+    return result;
+  }
 }
