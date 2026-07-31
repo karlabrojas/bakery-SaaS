@@ -28,7 +28,7 @@ export class InventoryService {
         if (existing) {
             throw new Error("Ya existe un ingrediente con ese nombre");
         }
-        
+
         const { data: ingredient, error } = await supabase
             .from("inventory")
             .insert({
@@ -64,6 +64,13 @@ export class InventoryService {
     }
 
     static async delete(id: string, bakeryId: string) {
+        const { error: errorMovimientos } = await supabase
+            .from("inventory_movements")
+            .delete()
+            .eq("inventory_id", id);
+
+        if (errorMovimientos) throw errorMovimientos;
+
         const { error } = await supabase
             .from("inventory")
             .delete()
@@ -71,6 +78,7 @@ export class InventoryService {
             .eq("bakery_id", bakeryId);
 
         if (error) throw error;
+
         return { message: "Ingrediente eliminado correctamente" };
     }
 
