@@ -9,7 +9,7 @@ interface Props {
     onSuccess: () => void;
     ingrediente?: Ingredient | null;
     onCrear: (datos: { name: string; quantity: number; unit: string, minimum_stock: number }) => Promise<void>;
-    onActualizar: (id: string, datos: { name?: string; quantity?: number; unit?: string , minimum_stock: number}) => Promise<void>;
+    onActualizar: (id: string, datos: { name?: string; quantity?: number; unit?: string, minimum_stock: number }) => Promise<void>;
 }
 
 const unidades = ["kg", "g", "l", "ml", "piezas", "tazas", "cucharadas", "cucharaditas"];
@@ -62,7 +62,6 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
             if (modoEditar && ingrediente) {
                 await onActualizar(ingrediente.id, {
                     name: nombre,
-                    quantity: Number(cantidad),
                     unit: unidad,
                     minimum_stock: Number(stockMinimo)
                 });
@@ -90,7 +89,7 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
                 <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white text-xl font-bold z-10">✕</button>
 
                 <div className="w-full space-y-6 p-6">
-                    
+
                     <div className="relative -mx-6 -mt-6 bg-[#472D20] pl-6 pr-14 py-5 rounded-t-2xl">
                         <h2 className="text-2xl font-bold text-white">
                             {modoEditar ? "Editar Ingrediente" : "Nuevo Ingrediente"}
@@ -113,18 +112,20 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Cantidad *</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={cantidad}
-                                    onChange={(e) => setCantidad(e.target.value)}
-                                    placeholder="0"
-                                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
-                                />
-                            </div>
+                            {!modoEditar && (
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">Cantidad *</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={cantidad}
+                                        onChange={(e) => setCantidad(e.target.value)}
+                                        placeholder="0"
+                                        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#472D20] transition"
+                                    />
+                                </div>
+                            )}
 
                             <div className="space-y-1.5">
                                 <label className="block text-xs font-bold uppercase text-stone-600 tracking-wider">

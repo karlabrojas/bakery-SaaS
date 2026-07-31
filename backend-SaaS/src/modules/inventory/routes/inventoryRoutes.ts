@@ -15,4 +15,6 @@ router.get("/movements", authenticate, InventoryController.getMovements);
 router.post("/movements/salida", authenticate, InventoryController.createSalida);
 
 router.get("/:id", authenticate, InventoryController.getById);
+
+router.post("/movements/ajuste", authenticate, InventoryController.createAjuste);
 export default router;

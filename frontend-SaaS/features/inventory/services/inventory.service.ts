@@ -106,3 +106,21 @@ export async function obtenerIngredientePorId(id: number) {
     const json = await respuesta.json();
     return json.data;
 }
+
+export async function registrarAjuste(datos: {
+    inventory_id: number;
+    cantidad_ajustada: number;
+    reason: string;
+}) {
+    const respuesta = await fetch(`${api}/api/inventory/movements/ajuste`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(datos),
+    });
+    const json = await respuesta.json();
+    if (!respuesta.ok) throw new Error(json.message || "Error al registrar ajuste");
+    return json.data;
+}

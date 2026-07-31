@@ -9,9 +9,10 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import EntradaModal from "./EntradaModal";
 import SalidaModal from "./SalidaModal";
 import IngredientDetailModal from "./IngredientDetailModal";
+import AjusteModal from "./AjusteModal";
 
 export function IngredientTable() {
-  const { ingredientes, cargando, error, cargarIngredientes, handleCrear, handleActualizar, handleEliminar, handleEntrada, handleSalida } = useIngredientes();
+  const { ingredientes, cargando, error, cargarIngredientes, handleCrear, handleActualizar, handleEliminar, handleEntrada, handleSalida, handleAjuste } = useIngredientes();
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState<Ingredient | null>(null);
@@ -26,6 +27,9 @@ export function IngredientTable() {
   const [salida, setSalida] = useState<Ingredient | null>(null);
 
   const [viendo, setViendo] = useState<Ingredient | null>(null);
+
+  const [ajustando, setAjustando] = useState<Ingredient | null>(null);
+
 
   const handleConfirmarEliminar = async () => {
     if (!eliminando) return;
@@ -150,6 +154,13 @@ export function IngredientTable() {
                       Ver detalle
                     </button>
 
+                    <button
+                      onClick={() => setAjustando(ingrediente)}
+                      className="px-3 py-1.5 text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition-colors border border-purple-200"
+                    >
+                      Ajuste
+                    </button>
+
                   </td>
                 </tr>
               ))
@@ -203,6 +214,14 @@ export function IngredientTable() {
         isOpen={!!viendo}
         onClose={() => setViendo(null)}
         ingrediente={viendo}
+      />
+
+      <AjusteModal
+        isOpen={!!ajustando}
+        onClose={() => setAjustando(null)}
+        onSuccess={cargarIngredientes}
+        ingrediente={ajustando}
+        onAjuste={handleAjuste}
       />
     </>
   );

@@ -188,4 +188,48 @@ export class InventoryService {
 
         return { ...ingrediente, movimientos: movimientos ?? [] };
     }
+
+    static async createAjuste(bakeryId: string, data: {
+        inventory_id: number;
+        cantidad_ajustada: number;
+        reason: string;
+    }) {
+        
+        const { data: ingrediente, error: errGet } = await supabase
+            .from("inventory")
+            .select("quantity")
+            .eq("id", data.inventory_id)
+            .single();
+
+        if (errGet) throw errGet;
+
+        const stockAnterior = Number(ingrediente.quantity);
+        const diferencia = data.cantidad_ajustada - stockAnterior;
+
+    
+        const { data: movement, error } = await supabase
+            .from("inventory_movements")
+            .insert({
+                inventory_id: data.inventory_id,
+                bakery_id: bakeryId,
+                quantity: Math.abs(diferencia),
+                movement_type: "AJUSTE",
+                reason: `${data.reason} (Stock anterior: ${stockAnterior} → Nuevo: ${data.cantidad_ajustada})`,
+                movement_date: new Date().toISOString().split("T")[0],
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        
+        const { error: errUpdate } = await supabase
+            .from("inventory")
+            .update({ quantity: data.cantidad_ajustada })
+            .eq("id", data.inventory_id);
+
+        if (errUpdate) throw errUpdate;
+
+        return movement;
+    }
 }

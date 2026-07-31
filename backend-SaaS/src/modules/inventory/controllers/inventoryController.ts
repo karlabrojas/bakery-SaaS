@@ -143,4 +143,34 @@ export class InventoryController {
             return res.status(500).json({ success: false, message: error.message });
         }
     }
+
+    static async createAjuste(req: Request, res: Response) {
+        try {
+            const { inventory_id, cantidad_ajustada, reason } = req.body;
+
+            if (!inventory_id || cantidad_ajustada === undefined || !reason) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Ingrediente, cantidad ajustada y motivo son obligatorios"
+                });
+            }
+
+            if (cantidad_ajustada < 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "La cantidad ajustada no puede ser negativa"
+                });
+            }
+
+            const data = await InventoryService.createAjuste(req.user!.bakeryId, {
+                inventory_id,
+                cantidad_ajustada,
+                reason,
+            });
+
+            return res.status(201).json({ success: true, data });
+        } catch (error: any) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }

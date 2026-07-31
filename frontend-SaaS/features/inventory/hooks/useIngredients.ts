@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { obtenerIngredientes, crearIngrediente, actualizarIngrediente, eliminarIngrediente, registrarEntrada, registrarSalida } from "../services/inventory.service";
+import { obtenerIngredientes, crearIngrediente, actualizarIngrediente, eliminarIngrediente, registrarEntrada, registrarSalida, registrarAjuste } from "../services/inventory.service";
 import { Ingredient } from "../types/inventory.type";
 
 export function useIngredientes() {
@@ -79,6 +79,19 @@ export function useIngredientes() {
             throw err;
         }
     };
-    
-    return { ingredientes, cargando, error, cargarIngredientes, handleCrear, handleActualizar, handleEliminar, handleEntrada, handleSalida };
+
+    const handleAjuste = async (datos: {
+        inventory_id: number;
+        cantidad_ajustada: number;
+        reason: string;
+    }) => {
+        try {
+            await registrarAjuste(datos);
+            await cargarIngredientes();
+        } catch (err: any) {
+            throw err;
+        }
+    };
+
+    return { ingredientes, cargando, error, cargarIngredientes, handleCrear, handleActualizar, handleEliminar, handleEntrada, handleSalida , handleAjuste};
 }
