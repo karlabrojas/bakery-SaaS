@@ -127,7 +127,7 @@ export class InventoryService {
         reason?: string;
         movement_date: string;
     }) {
-        
+
         const { data: ingrediente, error: errGet } = await supabase
             .from("inventory")
             .select("quantity")
@@ -165,5 +165,27 @@ export class InventoryService {
         if (errUpdate) throw errUpdate;
 
         return movement;
+    }
+
+    static async getById(id: number, bakeryId: string) {
+        const { data: ingrediente, error } = await supabase
+            .from("inventory")
+            .select("*")
+            .eq("id", id)
+            .eq("bakery_id", bakeryId)
+            .single();
+
+        if (error) throw error;
+
+        const { data: movimientos, error: errMov } = await supabase
+            .from("inventory_movements")
+            .select("*")
+            .eq("inventory_id", id)
+            .eq("bakery_id", bakeryId)
+            .order("movement_date", { ascending: false });
+
+        if (errMov) throw errMov;
+
+        return { ...ingrediente, movimientos: movimientos ?? [] };
     }
 }

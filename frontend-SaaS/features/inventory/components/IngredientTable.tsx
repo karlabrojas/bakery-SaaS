@@ -8,6 +8,7 @@ import SearchInput from "@/components/ui/SearchInput";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import EntradaModal from "./EntradaModal";
 import SalidaModal from "./SalidaModal";
+import IngredientDetailModal from "./IngredientDetailModal";
 
 export function IngredientTable() {
   const { ingredientes, cargando, error, cargarIngredientes, handleCrear, handleActualizar, handleEliminar, handleEntrada, handleSalida } = useIngredientes();
@@ -23,6 +24,8 @@ export function IngredientTable() {
   const [entrada, setEntrada] = useState<Ingredient | null>(null);
 
   const [salida, setSalida] = useState<Ingredient | null>(null);
+
+  const [viendo, setViendo] = useState<Ingredient | null>(null);
 
   const handleConfirmarEliminar = async () => {
     if (!eliminando) return;
@@ -140,6 +143,13 @@ export function IngredientTable() {
                       - Salida
                     </button>
 
+                    <button
+                      onClick={() => setViendo(ingrediente)}
+                      className="px-3 py-1.5 text-xs font-semibold bg-[#FBEACE] hover:bg-[#f0d9a8] text-[#472D20] rounded-lg transition-colors border border-[#B8926B]"
+                    >
+                      Ver detalle
+                    </button>
+
                   </td>
                 </tr>
               ))
@@ -187,6 +197,12 @@ export function IngredientTable() {
         onSuccess={cargarIngredientes}
         ingrediente={salida}
         onSalida={handleSalida}
+      />
+
+      <IngredientDetailModal
+        isOpen={!!viendo}
+        onClose={() => setViendo(null)}
+        ingrediente={viendo}
       />
     </>
   );

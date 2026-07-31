@@ -97,3 +97,12 @@ export async function registrarSalida(datos: {
     if (!respuesta.ok) throw new Error(json.message || "Error al registrar salida");
     return json.data;
 }
+
+export async function obtenerIngredientePorId(id: number) {
+    const respuesta = await fetch(`${api}/api/inventory/${id}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    if (!respuesta.ok) throw new Error("Error al obtener ingrediente");
+    const json = await respuesta.json();
+    return json.data;
+}
