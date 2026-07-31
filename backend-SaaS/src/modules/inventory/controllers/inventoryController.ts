@@ -99,4 +99,38 @@ export class InventoryController {
             return res.status(500).json({ success: false, message: error.message });
         }
     }
+
+    static async createSalida(req: Request, res: Response) {
+        try {
+            const { inventory_id, quantity, reason, movement_date } = req.body;
+
+            if (!inventory_id || !quantity || !movement_date) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Ingrediente, cantidad y fecha son obligatorios"
+                });
+            }
+
+            if (quantity <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "La cantidad debe ser mayor a 0"
+                });
+            }
+
+            const data = await InventoryService.createSalida(req.user!.bakeryId, {
+                inventory_id,
+                quantity,
+                reason,
+                movement_date,
+            });
+
+            return res.status(201).json({ success: true, data });
+        } catch (error: any) {
+            if (error.message === "La cantidad de salida supera el stock disponible") {
+                return res.status(400).json({ success: false, message: error.message });
+            }
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }

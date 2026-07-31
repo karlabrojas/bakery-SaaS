@@ -78,3 +78,22 @@ export async function registrarEntrada(datos: {
     if (!respuesta.ok) throw new Error(json.message || "Error al registrar entrada");
     return json.data;
 }
+
+export async function registrarSalida(datos: {
+    inventory_id: number;
+    quantity: number;
+    reason?: string;
+    movement_date: string;
+}) {
+    const respuesta = await fetch(`${api}/api/inventory/movements/salida`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(datos),
+    });
+    const json = await respuesta.json();
+    if (!respuesta.ok) throw new Error(json.message || "Error al registrar salida");
+    return json.data;
+}

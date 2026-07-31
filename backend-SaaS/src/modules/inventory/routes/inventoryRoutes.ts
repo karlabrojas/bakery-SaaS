@@ -12,4 +12,5 @@ router.delete("/:id", authenticate, InventoryController.delete);
 router.post("/movements", authenticate, InventoryController.createMovement);
 router.get("/movements", authenticate, InventoryController.getMovements);
 
+router.post("/movements/salida", authenticate, InventoryController.createSalida);
 export default router;

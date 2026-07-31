@@ -69,7 +69,7 @@ export class InventoryService {
         reason?: string;
         movement_date: string;
     }) {
-        
+
         const { data: movement, error } = await supabase
             .from("inventory_movements")
             .insert({
@@ -119,5 +119,51 @@ export class InventoryService {
         const { data, error } = await query;
         if (error) throw error;
         return data;
+    }
+
+    static async createSalida(bakeryId: string, data: {
+        inventory_id: number;
+        quantity: number;
+        reason?: string;
+        movement_date: string;
+    }) {
+        
+        const { data: ingrediente, error: errGet } = await supabase
+            .from("inventory")
+            .select("quantity")
+            .eq("id", data.inventory_id)
+            .single();
+
+        if (errGet) throw errGet;
+
+        if (Number(data.quantity) > Number(ingrediente.quantity)) {
+            throw new Error("La cantidad de salida supera el stock disponible");
+        }
+
+        const { data: movement, error } = await supabase
+            .from("inventory_movements")
+            .insert({
+                inventory_id: data.inventory_id,
+                bakery_id: bakeryId,
+                quantity: data.quantity,
+                movement_type: "SALIDA",
+                reason: data.reason ?? null,
+                movement_date: data.movement_date,
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        const nuevaCantidad = Number(ingrediente.quantity) - Number(data.quantity);
+
+        const { error: errUpdate } = await supabase
+            .from("inventory")
+            .update({ quantity: nuevaCantidad })
+            .eq("id", data.inventory_id);
+
+        if (errUpdate) throw errUpdate;
+
+        return movement;
     }
 }
