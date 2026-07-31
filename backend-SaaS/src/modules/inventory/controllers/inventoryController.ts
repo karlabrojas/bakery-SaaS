@@ -16,16 +16,25 @@ export class InventoryController {
             const { name, quantity, unit, minimum_stock } = req.body;
 
             if (!name || quantity === undefined || !unit) {
-                return res.status(400).json({ success: false, message: "Nombre, cantidad y unidad son obligatorios" });
+                return res.status(400).json({
+                    success: false,
+                    message: "Nombre, cantidad y unidad son obligatorios"
+                });
             }
 
             if (quantity < 0) {
-                return res.status(400).json({ success: false, message: "La cantidad no puede ser negativa" });
+                return res.status(400).json({
+                    success: false,
+                    message: "La cantidad no puede ser negativa"
+                });
             }
 
             const data = await InventoryService.create(req.user!.bakeryId, { name, quantity, unit, minimum_stock });
             return res.status(201).json({ success: true, data });
         } catch (error: any) {
+            if (error.message === "Ya existe un ingrediente con ese nombre") {
+                return res.status(409).json({ success: false, message: error.message });
+            }
             return res.status(500).json({ success: false, message: error.message });
         }
     }

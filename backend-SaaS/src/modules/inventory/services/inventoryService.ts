@@ -18,6 +18,17 @@ export class InventoryService {
         unit: string;
         minimum_stock?: number;
     }) {
+        const { data: existing } = await supabase
+            .from("inventory")
+            .select("id")
+            .ilike("name", data.name)
+            .eq("bakery_id", bakeryId)
+            .maybeSingle();
+
+        if (existing) {
+            throw new Error("Ya existe un ingrediente con ese nombre");
+        }
+        
         const { data: ingredient, error } = await supabase
             .from("inventory")
             .insert({
@@ -194,7 +205,7 @@ export class InventoryService {
         cantidad_ajustada: number;
         reason: string;
     }) {
-        
+
         const { data: ingrediente, error: errGet } = await supabase
             .from("inventory")
             .select("quantity")
@@ -206,7 +217,7 @@ export class InventoryService {
         const stockAnterior = Number(ingrediente.quantity);
         const diferencia = data.cantidad_ajustada - stockAnterior;
 
-    
+
         const { data: movement, error } = await supabase
             .from("inventory_movements")
             .insert({
@@ -222,7 +233,7 @@ export class InventoryService {
 
         if (error) throw error;
 
-        
+
         const { error: errUpdate } = await supabase
             .from("inventory")
             .update({ quantity: data.cantidad_ajustada })
