@@ -1,4 +1,3 @@
-import { InventoryTable } from "@/features/inventory/components/InventoryTable";
 import ProductTable from "@/features/products/components/ProductTable";
 
 export default function InventoryPage() {

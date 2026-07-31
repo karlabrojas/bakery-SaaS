@@ -13,6 +13,7 @@ interface ConfirmModalProps {
   variant?: "danger" | "primary";
   errorMessage?: string;
   onClose: () => void;
+  error?: string;
   onConfirm: () => void;
 }
 

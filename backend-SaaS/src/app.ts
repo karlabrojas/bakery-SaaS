@@ -10,6 +10,7 @@ import { supabase } from "./config/supabase";
 import orderRoutes from "./modules/orders/routes/orderRoutes";
 import paymentRoutes from "./modules/orders/routes/paymentRoutes";
 import deliveryRoutes from "./modules/orders/routes/deliveryRoutes";
+import inventoryRoutes from "./modules/inventory/routes/inventoryRoutes";
 
 const app = express();
 const frontendURL = process.env.URL_FRONTEND;
@@ -63,5 +64,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/orders/:id/payments", paymentRoutes);
 app.use("/api/orders/:id/delivery", deliveryRoutes);
+
+app.use("/api/inventory", inventoryRoutes);
 
 export default app;
