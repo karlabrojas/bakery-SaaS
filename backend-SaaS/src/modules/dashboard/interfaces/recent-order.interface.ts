@@ -1,3 +1,5 @@
+import { OrderStatus } from "../../orders/interfaces/order.interface";
+
 export interface RecentOrder {
   id: string;
 
@@ -10,7 +12,7 @@ export interface RecentOrder {
 
   total: number;
 
-  status: string;
+  status: OrderStatus;
 
   deliveryDate: string;
 
