@@ -20,7 +20,7 @@ export default function Login() {
       setError("");
       await login(email, password);
 
-      router.push("/sales");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
     }

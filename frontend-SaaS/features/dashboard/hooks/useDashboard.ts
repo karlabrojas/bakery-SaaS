@@ -1,30 +1,38 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { dashboardService } from "../services/dashboard.service";
 import { DashboardResponse } from "../types/dashboard.type";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export function useDashboard() {
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
 
-class DashboardService {
-  private getHeaders() {
-    const token = localStorage.getItem("accessToken");
+  const [loading, setLoading] = useState(true);
 
-    return {
-      Authorization: `Bearer ${token}`,
-    };
-  }
+  const [error, setError] = useState("");
 
-  async getDashboard(): Promise<DashboardResponse> {
-    const response = await fetch(`${API_URL}/api/dashboard`, {
-      headers: this.getHeaders(),
-      cache: "no-store",
-    });
+  useEffect(() => {
+    loadDashboard();
+  }, []);
 
-    const data = await response.json();
+  async function loadDashboard() {
+    try {
+      setLoading(true);
 
-    if (!response.ok) {
-      throw new Error(data.message);
+      const data = await dashboardService.getDashboard();
+
+      setDashboard(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    return data;
   }
-}
 
-export const dashboardService = new DashboardService();
+  return {
+    dashboard,
+    loading,
+    error,
+    reload: loadDashboard,
+  };
+}

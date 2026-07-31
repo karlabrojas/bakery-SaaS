@@ -7,12 +7,13 @@ export default function Card({ children, className = "" }: CardProps) {
   return (
     <div
       className={`
-        bg-[#FBEACE]
+        bg-[#FFF8E0]
         rounded-xl
+        border-2
         border-[#B8926B]
-        border-4
-        p-5
-        shadow-sm
+        p-6
+        shadow-md
+        transition-all
         ${className}
       `}
     >

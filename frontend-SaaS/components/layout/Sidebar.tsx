@@ -8,6 +8,7 @@ import {
   Croissant,
   UserCircle,
   Loader2,
+  LayoutDashboard,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -28,6 +29,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, bakery, loading } = useProfile();
 
   const menuItems = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
     {
       name: "Ventas",
       href: "/sales",
@@ -123,7 +129,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           <div className="px-6 pt-6">
             <p className="text-xs font-bold uppercase tracking-wider text-[#E8D6AF]/60">
-              Dashboard
+              Menú Principal
             </p>
           </div>
 

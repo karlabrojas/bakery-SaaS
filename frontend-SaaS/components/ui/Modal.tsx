@@ -14,7 +14,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-[#472D20]/40 backdrop-blur-xs z-40 transition-opacity"
         onClick={onClose}
       />
 
@@ -31,9 +31,9 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
           rounded-2xl
           bg-[#FFF8E0]
           p-6
-          shadow-2xl
-          border
-          border-[#EAD9B6]
+          shadow-xl
+          border-2
+          border-[#B8926B]
           overflow-hidden
         "
       >
@@ -45,20 +45,21 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
             top-4
             right-4
             z-10
-            w-9
-            h-9
+            w-8
+            h-8
             rounded-full
-            bg-white/10
-            hover:bg-white/20
-            text-white
+            bg-[#FBEACE]
+            hover:bg-[#EAD9B6]
+            text-[#472D20]
+            border
+            border-[#B8926B]
             flex
             items-center
             justify-center
             transition-colors
-            backdrop-blur-sm
           "
         >
-          <X size={18} strokeWidth={2.5} />
+          <X size={16} strokeWidth={2.5} />
         </button>
 
         {children}
