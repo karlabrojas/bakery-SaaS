@@ -13,10 +13,11 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
-    primary: "bg-[#472D20] text-white hover:bg-[#6B3118]",
-    secondary: "bg-[#EAD9B6] text-[#5A2E1F] hover:bg-[#d4c29d]",
-    danger: "bg-red-600 text-white hover:bg-red-700",
-    link: "font-bold text-[#472D20] hover:text-[#EAD9B6] transition-colors bg-transparent px-0 py-0",
+    primary: "bg-[#472D20] text-white hover:bg-[#5A2E1F] shadow-sm",
+    secondary:
+      "bg-[#FBEACE] text-[#472D20] border-2 border-[#B8926B] hover:bg-[#f2dfbc]",
+    danger: "bg-[#A83232] text-white hover:bg-[#8F2929] shadow-sm",
+    link: "font-bold text-[#472D20] hover:text-[#B8926B] transition-colors bg-transparent px-0 py-0 shadow-none",
   };
 
   return (
@@ -25,8 +26,9 @@ export default function Button({
       className={`
         rounded-lg
         transition-all
-        text-lg font-semibold
-        ${variant !== "link" ? "px-12 py-4" : ""}
+        text-base font-semibold
+        flex items-center justify-center
+        ${variant !== "link" ? "px-6 py-3" : ""}
         ${variants[variant]}
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${className}

@@ -5,6 +5,14 @@ import Table from "@/components/ui/Table";
 import EditSaleModal from "./EditModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import { getSales, deleteSale } from "../services/api";
+import {
+  Pencil,
+  Trash2,
+  Calendar,
+  FileText,
+  DollarSign,
+  CreditCard,
+} from "lucide-react";
 
 interface Sale {
   id: string;
@@ -60,8 +68,8 @@ export default function SalesHistoryTable() {
 
   if (sales.length === 0) {
     return (
-      <div className="p-8 text-center rounded-xl bg-stone-50 border border-dashed border-stone-200">
-        <p className="text-sm font-medium text-stone-400">
+      <div className="p-8 text-center rounded-xl bg-[#FFF8E0] border-2 border-dashed border-[#B8926B]">
+        <p className="text-sm font-semibold text-[#8C6D53]">
           No hay ventas registradas en el historial.
         </p>
       </div>
@@ -70,15 +78,17 @@ export default function SalesHistoryTable() {
 
   return (
     <>
-      <div className="overflow-hidden bg-white rounded-xl shadow-sm border border-stone-100">
-        <Table headers={["Fecha", "Folio", "Total", "Pago", "Acciones"]}>
+      <div className="overflow-hidden bg-[#FFF8E0] rounded-xl shadow-md border-2 border-[#B8926B]">
+        <Table
+          headers={["Fecha", "Folio", "Total", "Método de Pago", "Acciones"]}
+        >
           {sales.map((sale, index) => {
             if (!sale || !sale.id) {
               return (
                 <tr key={index}>
                   <td
                     colSpan={5}
-                    className="text-red-500 p-4 text-center text-sm font-semibold"
+                    className="text-red-600 p-4 text-center text-sm font-semibold bg-[#FFF8E0]"
                   >
                     Registro de venta inválido
                   </td>
@@ -89,42 +99,57 @@ export default function SalesHistoryTable() {
             return (
               <tr
                 key={sale.id}
-                className="border-b border-stone-100 last:border-none hover:bg-stone-50/50 transition-colors"
+                className="border-b border-[#EAD9B6] last:border-none hover:bg-[#FBEACE]/50 transition-colors"
               >
-                <td className="px-4 py-3.5 text-sm text-stone-600 font-medium">
-                  {sale.created_at
-                    ? new Date(sale.created_at).toLocaleDateString()
-                    : "Sin fecha"}
+                {/* Fecha */}
+                <td className="px-6 py-4 text-sm text-[#5A2E1F] font-medium">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-[#8C6D53]" />
+                    <span>
+                      {sale.created_at
+                        ? new Date(sale.created_at).toLocaleDateString("es-MX")
+                        : "Sin fecha"}
+                    </span>
+                  </div>
                 </td>
 
-                <td className="px-4 py-3.5 text-xs font-mono font-bold text-[#472D20] bg-[#472D20]/5 rounded-md inline-block my-2">
-                  {sale.id.substring(0, 8).toUpperCase()}
+                <td className="px-6 py-4">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FBEACE] border border-[#B8926B] text-xs font-mono font-bold text-[#472D20]">
+                    <FileText size={14} className="text-[#8C6D53]" />
+                    {sale.id.substring(0, 8).toUpperCase()}
+                  </div>
                 </td>
 
-                <td className="px-4 py-3.5 text-sm font-bold text-stone-900 font-mono">
-                  ${sale.total_amount ?? 0}
+                <td className="px-6 py-4 text-sm font-bold text-[#472D20] font-mono">
+                  <div className="flex items-center gap-1">
+                    <DollarSign size={16} className="text-[#8C6D53]" />
+                    <span>{sale.total_amount ?? 0}</span>
+                  </div>
                 </td>
 
-                <td className="px-4 py-3.5 text-sm text-stone-600">
-                  <span className="capitalize px-2 py-0.5 rounded bg-stone-100 text-stone-700 text-xs font-medium">
+                <td className="px-6 py-4 text-sm text-[#5A2E1F]">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBEACE] border border-[#B8926B] text-xs font-semibold text-[#472D20] capitalize">
+                    <CreditCard size={14} className="text-[#8C6D53]" />
                     {sale.payment_method ?? "Sin método"}
                   </span>
                 </td>
 
-                <td className="px-4 py-3.5 text-sm">
+                <td className="px-6 py-4 text-sm">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleEdit(sale)}
-                      className="px-3 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-[#EAD9B6] text-[#6B3118] rounded-lg transition-colors border border-stone-200"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-[#EAD9B6] text-stone-700 rounded-lg transition-colors border border-[#D9C3A9] shadow-xs"
                     >
-                      Editar
+                      <Pencil size={14} className="text-[#8C6D53]" />
+                      <span>Editar</span>
                     </button>
 
                     <button
                       onClick={() => handleDelete(sale)}
-                      className="px-3 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200 shadow-xs"
                     >
-                      Eliminar
+                      <Trash2 size={14} />
+                      <span>Eliminar</span>
                     </button>
                   </div>
                 </td>

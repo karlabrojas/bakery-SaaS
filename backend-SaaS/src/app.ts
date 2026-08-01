@@ -11,6 +11,7 @@ import orderRoutes from "./modules/orders/routes/orderRoutes";
 import paymentRoutes from "./modules/orders/routes/paymentRoutes";
 import deliveryRoutes from "./modules/orders/routes/deliveryRoutes";
 import inventoryRoutes from "./modules/inventory/routes/inventoryRoutes";
+import dashboardRoutes from "./modules/dashboard/routes/dashboardRoutes";
 
 const app = express();
 const frontendURL = process.env.URL_FRONTEND;
@@ -59,7 +60,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/customers", customerRoutes);
-
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/orders/:id/payments", paymentRoutes);

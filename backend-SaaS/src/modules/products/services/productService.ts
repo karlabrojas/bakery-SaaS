@@ -245,4 +245,19 @@ export class ProductService {
 
     return { message: "Producto activado correctamente" };
   }
+
+  static async countProducts(bakeryId: string) {
+    const { count, error } = await supabase
+      .from("products")
+      .select("*", {
+        count: "exact",
+        head: true,
+      })
+      .eq("bakery_id", bakeryId)
+      .eq("is_active", true);
+
+    if (error) throw error;
+
+    return count ?? 0;
+  }
 }

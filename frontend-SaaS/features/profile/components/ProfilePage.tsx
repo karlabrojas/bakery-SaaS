@@ -34,10 +34,10 @@ export default function ProfilePage() {
   if (!user || !bakery) return null;
 
   return (
-    <div className="min-h-screen bg-[#F8F5EF]">
-      <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="min-h-screen ">
+      <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="mb-10">
-          <h1 className="text-4xl font-bold text-[#6B3118]">Mi Perfil</h1>
+          <h1 className="text-4xl font-bold text-[#472D20]">Mi Perfil</h1>
           <p className="text-gray-600 mt-2">
             Administra tu información personal y los datos de tu panadería.
           </p>

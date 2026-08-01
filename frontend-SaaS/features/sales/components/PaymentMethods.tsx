@@ -29,22 +29,24 @@ export default function PaymentMethods({ selectedMethod, onSelect }: Props) {
             }
             className={`
               flex flex-col items-center justify-center gap-2 flex-1 
-              rounded-xl p-4 border-2 transition-all duration-200 cursor-pointer
-              active:scale-[0.97] select-none
+              rounded-2xl p-4 border transition-all duration-200 cursor-pointer
+              active:scale-[0.97] select-none shadow-xs
               ${
                 isSelected
-                  ? "border-[#6B3118] bg-[#EAD9B6] text-[#6B3118] shadow-md font-bold"
-                  : "border-[#B8926B]/40 bg-[#FBEACE] text-[#5A2E1F] hover:border-[#B8926B]"
+                  ? "border-2 border-[#472D20] bg-[#F5EBE0] text-[#472D20] font-bold shadow-sm"
+                  : "border-[#D9C3A9] bg-[#FAF4ED] text-[#7C5A42] hover:border-[#472D20]/50 hover:bg-[#F5EBE0]/50"
               }
             `}
           >
             <Icon
-              size={26}
+              size={24}
               className={
-                isSelected ? "scale-110 transition-transform" : "opacity-80"
+                isSelected
+                  ? "text-[#472D20] scale-110 transition-transform"
+                  : "text-[#8C6D53]"
               }
             />
-            <span className="text-sm font-medium tracking-wide">
+            <span className="text-xs font-semibold tracking-wide">
               {method.label}
             </span>
           </button>
