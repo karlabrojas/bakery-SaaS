@@ -9,11 +9,11 @@ interface FormProps {
 
 export default function DeliveryForm({ initialData, onChange }: FormProps) {
   const [formData, setFormData] = useState({
-    name: initialData?.name || "karla beatriz",
-    phone: initialData?.phone || "2381235425",
-    address: initialData?.address || "Privada 8 norte 1004",
-    status: initialData?.status || "Pendiente",
-    notes: initialData?.notes || "Casa grande con arbol enfrente",
+    recipientName: initialData?.recipientName ?? initialData?.recipient_name ?? "", 
+    recipientPhone: initialData?.recipientPhone ?? initialData?.recipient_phone ?? "", 
+    address: initialData?.address ?? "",
+    status: initialData?.status ?? "Pendiente",
+    notes: initialData?.notes ?? "",
   });
 
   useEffect(() => {
@@ -37,8 +37,8 @@ export default function DeliveryForm({ initialData, onChange }: FormProps) {
           </label>
           <input
             type="text"
-            name="name"
-            value={formData.name}
+            name="recipientName"
+            value={formData.recipientName}
             onChange={handleChange}
             className="w-full bg-[#faefdf] border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
           />
@@ -50,8 +50,8 @@ export default function DeliveryForm({ initialData, onChange }: FormProps) {
           </label>
           <input
             type="text"
-            name="phone"
-            value={formData.phone}
+            name="recipientPhone" 
+            value={formData.recipientPhone}
             onChange={handleChange}
             className="w-full bg-[#faefdf] border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
           />
@@ -98,7 +98,7 @@ export default function DeliveryForm({ initialData, onChange }: FormProps) {
             name="notes"
             value={formData.notes}
             onChange={handleChange}
-            className="w-full h-full min-h-[90px] flex-1 resize-none bg-[#faefdf] border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
+            className="w-full h-full min-h-22.5 flex-1 resize-none bg-[#faefdf] border border-[#d3ba97] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] text-stone-800 transition-colors"
           />
         </div>
       </div>
