@@ -5,11 +5,13 @@ import saleRoutes from "./modules/sales/routes/saleRoutes";
 import productRoutes from "./modules/products/routes/productRoutes";
 import authRoutes from "./modules/auth/routes/auth.routes";
 import customerRoutes from "./modules/customers/routes/customerRoutes";
-
+import profileRoutes from "./modules/profile/routes/profileRoutes";
 import { supabase } from "./config/supabase";
 import orderRoutes from "./modules/orders/routes/orderRoutes";
 import paymentRoutes from "./modules/orders/routes/paymentRoutes";
 import deliveryRoutes from "./modules/orders/routes/deliveryRoutes";
+import inventoryRoutes from "./modules/inventory/routes/inventoryRoutes";
+import dashboardRoutes from "./modules/dashboard/routes/dashboardRoutes";
 
 const app = express();
 const frontendURL = process.env.URL_FRONTEND;
@@ -58,10 +60,12 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/customers", customerRoutes);
-
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/orders", orderRoutes);
-
+app.use("/api/profile", profileRoutes);
 app.use("/api/orders/:id/payments", paymentRoutes);
 app.use("/api/orders/:id/delivery", deliveryRoutes);
+
+app.use("/api/inventory", inventoryRoutes);
 
 export default app;

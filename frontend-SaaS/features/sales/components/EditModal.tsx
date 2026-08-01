@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import Modal from "@/components/ui/Modal";
 import PaymentMethods from "./PaymentMethods";
 import { updateSale } from "../services/api";
 import { fetchAllProducts } from "@/features/products/services/products.service";
+import { X } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -75,7 +75,7 @@ export default function EditSaleModal({
     );
   }, [sale, products]);
 
-  if (!sale || !sale.id) return null;
+  if (!open || !sale || !sale.id) return null;
 
   const updateQuantity = (index: number, value: string) => {
     setItems((prev) =>
@@ -109,93 +109,110 @@ export default function EditSaleModal({
   };
 
   return (
-    <Modal isOpen={open} onClose={onClose}>
-      <div className="space-y-5">
-        <div className="relative -mx-6 -mt-6 mb-6 bg-[#472D20] pl-6 pr-14 py-5 rounded-t-2xl">
-          <div className="flex items-center">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Editar venta</h2>
-
-              <p className="text-sm text-[#FBEACE]">
-                Actualiza el método de pago o las cantidades.
-              </p>
-
-              <span className="mt-2 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-                Folio #{sale.id.substring(0, 8).toUpperCase()}
-              </span>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="relative bg-[#472D20] px-6 py-5 text-white flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold tracking-wide">Editar venta</h2>
+            <p className="text-xs text-[#FBEACE] mt-0.5">
+              Actualiza el método de pago o las cantidades.
+            </p>
+            <span className="mt-2 inline-block rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold text-white">
+              Folio #{sale.id.substring(0, 8).toUpperCase()}
+            </span>
           </div>
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase text-stone-600 tracking-wider">
-            Método de pago
-          </label>
-          <PaymentMethods selectedMethod={method} onSelect={setMethod} />
-        </div>
+        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase text-[#7C5A42] tracking-wider">
+              Método de pago
+            </label>
+            <PaymentMethods selectedMethod={method} onSelect={setMethod} />
+          </div>
 
-        <div className="space-y-2">
-          <h3 className="text-xs font-bold uppercase text-stone-600 tracking-wider">
-            Ajustar cantidades
-          </h3>
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold uppercase text-[#7C5A42] tracking-wider">
+              Ajustar cantidades
+            </h3>
 
-          <div className="space-y-1.5 max-h-50 overflow-y-auto pr-1">
-            {items.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between rounded-2xl border border-stone-200 bg-white p-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-xl overflow-hidden border bg-stone-100 shrink-0">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-stone-400">
-                        Sin foto
-                      </div>
-                    )}
+            <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+              {items.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-xl border border-[#D9C3A9] bg-white p-3 shadow-xs gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#D9C3A9] bg-[#FAF4ED] shrink-0 flex items-center justify-center">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-[9px] text-[#8C6D53]">
+                          Sin foto
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs font-bold text-[#472D20] truncate">
+                        {item.name}
+                      </h4>
+                      <p className="text-xs font-mono text-[#7C5A42]">
+                        ${item.price.toFixed(2)} c/u
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="font-bold text-stone-900">{item.name}</h3>
-                    <p className="text-sm text-stone-500">
-                      ${item.price.toFixed(2)}
-                    </p>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold text-[#7C5A42] hidden sm:inline">
+                      Cant:
+                    </span>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={item.quantity}
+                      onChange={(e) => updateQuantity(index, e.target.value)}
+                      className="w-16 h-10 text-center font-bold text-sm bg-white border-[#D9C3A9] text-[#472D20] rounded-xl focus:border-[#472D20]"
+                    />
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <Input
-                  type="number"
-                  min={0}
-                  value={item.quantity}
-                  onChange={(e) => updateQuantity(index, e.target.value)}
-                  className="w-20 h-11 text-center font-bold text-lg"
-                />
-              </div>
-            ))}
+          <div className="flex justify-between items-center rounded-xl border border-[#D9C3A9] bg-[#FAF4ED] p-4">
+            <p className="text-xs uppercase tracking-wider font-bold text-[#7C5A42]">
+              Total de la venta
+            </p>
+            <p className="text-2xl font-black font-mono text-[#472D20]">
+              $
+              {Number(sale.total_amount ?? 0).toLocaleString("es-MX", {
+                minimumFractionDigits: 2,
+              })}
+            </p>
           </div>
         </div>
 
-        <div className="flex justify-between items-center rounded-2xl border border-stone-200 bg-[#FFFDF8] p-5">
-          <p className="text-sm uppercase tracking-wide text-stone-500">
-            Total de la venta
-          </p>
-          <p className="text-3xl font-black text-[#472D20]">
-            ${sale.total_amount ?? 0}
-          </p>
-        </div>
-
-        <div className="flex justify-end gap-4 border-t border-stone-200 pt-5">
-          <Button variant="secondary" className="px-8 h-20" onClick={onClose}>
+        <div className="flex justify-end gap-3 border-t border-[#D9C3A9] bg-white px-6 py-4">
+          <Button
+            variant="secondary"
+            className="px-5 h-11 text-xs bg-white border border-[#D9C3A9] text-[#472D20] hover:bg-[#FAF4ED] rounded-xl"
+            onClick={onClose}
+          >
             Cancelar
           </Button>
 
           <Button
-            className="px-8 h-20"
+            className="px-6 h-11 text-xs font-bold bg-[#472D20] hover:bg-[#3B281A] text-white rounded-xl shadow-xs"
             onClick={handleUpdate}
             disabled={loading}
           >
@@ -203,6 +220,6 @@ export default function EditSaleModal({
           </Button>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 }

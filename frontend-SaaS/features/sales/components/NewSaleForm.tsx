@@ -10,7 +10,6 @@ import { useState } from "react";
 
 export default function NewSaleForm() {
   const router = useRouter();
-
   const {
     products: productos = [],
     setProducts: setProductos,
@@ -71,9 +70,9 @@ export default function NewSaleForm() {
   );
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-[#FFFCF5] rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-[#D9C3A9] overflow-hidden">
       <div className="bg-[#472D20] px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-xl font-bold text-white tracking-wide">
+        <h2 className="text-lg font-bold text-white tracking-wide">
           Nueva Venta
         </h2>
         <div className="w-full sm:w-72">
@@ -85,22 +84,22 @@ export default function NewSaleForm() {
         {cargando && (
           <div className="py-12 flex flex-col items-center justify-center space-y-2">
             <div className="w-8 h-8 border-4 border-[#472D20] border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm font-medium text-stone-500">
+            <p className="text-xs font-medium text-[#7C5A42]">
               Cargando catálogo de productos...
             </p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl text-center font-medium">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-4 rounded-xl text-center font-medium">
             {error}
           </div>
         )}
 
         {!cargando && !error && (
-          <div className="divide-y divide-stone-100 max-h-[50vh] overflow-y-auto pr-2 space-y-2">
+          <div className="divide-y divide-[#EFE7DE] max-h-[50vh] overflow-y-auto pr-2 space-y-2">
             {(productosFiltrados.length ?? 0) === 0 ? (
-              <p className="text-center py-12 text-stone-400 text-sm">
+              <p className="text-center py-12 text-[#8C6D53] text-xs">
                 No se encontraron productos disponibles.
               </p>
             ) : (
@@ -127,9 +126,9 @@ export default function NewSaleForm() {
           </div>
         )}
 
-        <div className="pt-4 border-t border-stone-100 flex justify-end">
+        <div className="pt-4 border-t border-[#D9C3A9] flex justify-end">
           <Button
-            className={`w-full sm:w-48 h-16 text-base font-bold shadow-md transition-all ${
+            className={`w-full sm:w-48 h-12 text-xs font-bold bg-[#472D20] hover:bg-[#3B281A] text-white rounded-xl shadow-xs transition-all ${
               !hayProductosSeleccionados
                 ? "opacity-40 cursor-not-allowed"
                 : "active:scale-[0.98]"

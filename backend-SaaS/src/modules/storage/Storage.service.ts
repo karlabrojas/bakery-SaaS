@@ -2,23 +2,29 @@ import { randomUUID } from "crypto";
 import { supabase } from "../../config/supabase";
 
 export class StorageService {
-  private static readonly BUCKET = "product-images";
-  private static readonly FOLDER = "products";
+  static readonly BUCKETS = {
+    PRODUCTS: "product-images",
+    PROFILES: "profile-images",
+  };
 
-  /**
-   * Sube una imagen al bucket y devuelve la ruta almacenada.
-   * Ejemplo:
-   * products/8d8b7b0b-9f5e-4d92-a1d6-8f9b3f93a1f7.png
-   */
-  static async uploadProductImage(file: Express.Multer.File): Promise<string> {
+  static readonly FOLDERS = {
+    PRODUCTS: "products",
+    PROFILES: "profile",
+  };
+
+  static async uploadImage(
+    file: Express.Multer.File,
+    bucket: string,
+    folder: string,
+  ): Promise<string> {
     const extension = file.originalname.split(".").pop();
 
     const fileName = `${randomUUID()}.${extension}`;
 
-    const filePath = `${this.FOLDER}/${fileName}`;
+    const filePath = `${folder}/${fileName}`;
 
     const { error } = await supabase.storage
-      .from(this.BUCKET)
+      .from(bucket)
       .upload(filePath, file.buffer, {
         contentType: file.mimetype,
         upsert: false,
@@ -31,43 +37,34 @@ export class StorageService {
     return filePath;
   }
 
-  /**
-   * Elimina una imagen del bucket.
-   */
-  static async deleteImage(path: string | null): Promise<void> {
+  static async deleteImage(bucket: string, path: string | null): Promise<void> {
     if (!path) return;
 
-    const { error } = await supabase.storage.from(this.BUCKET).remove([path]);
+    const { error } = await supabase.storage.from(bucket).remove([path]);
 
     if (error) {
       throw new Error(`Error al eliminar la imagen: ${error.message}`);
     }
   }
 
-  /**
-   * Obtiene la URL pública de una imagen.
-   */
-  static getPublicUrl(path: string | null): string | null {
+  static getPublicUrl(bucket: string, path: string | null): string | null {
     if (!path) return null;
 
-    const { data } = supabase.storage.from(this.BUCKET).getPublicUrl(path);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
 
     return data.publicUrl;
   }
 
-  /**
-   * Reemplaza una imagen.
-   * Elimina la anterior y sube la nueva.
-   * Devuelve el nuevo path.
-   */
   static async replaceImage(
+    bucket: string,
+    folder: string,
     oldPath: string | null,
     file: Express.Multer.File,
   ): Promise<string> {
     if (oldPath) {
-      await this.deleteImage(oldPath);
+      await this.deleteImage(bucket, oldPath);
     }
 
-    return await this.uploadProductImage(file);
+    return this.uploadImage(file, bucket, folder);
   }
 }

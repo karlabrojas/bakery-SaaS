@@ -26,13 +26,12 @@ export default function DeliveryCard({
     <Card className="bg-white p-6 rounded-2xl border border-[#EAD9B6]/40 shadow-sm space-y-5">
       <div className="flex justify-between items-center border-b border-stone-100 pb-3">
         <h3 className="text-xl font-bold text-[#472D20] flex items-center gap-2">
-          <span>🚚</span> Detalles de Entrega
+          Detalles de Entrega
         </h3>
         <DeliveryStatusBadge status={delivery.status} />
       </div>
 
       <div className="space-y-3 text-stone-700 text-sm md:text-base">
-        {/* ⚡ Renderizado seguro multiformato */}
         <p>
           <strong className="text-[#472D20]">Destinatario:</strong>{" "}
           {(delivery as any).recipientName ?? delivery.recipient_name}

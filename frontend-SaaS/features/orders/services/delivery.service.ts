@@ -42,16 +42,18 @@ export async function createDelivery(
 export async function getDelivery(orderId: string): Promise<Delivery> {
   const bakeryId = getBakeryId();
 
-  const response = await fetch(
-    `${API_URL}/api/orders/${orderId}/delivery?bakeryId=${bakeryId}`,
-    {
-      headers: { Authorization: `Bearer ${getToken()}` },
-    },
-  );
+  const response = await fetch(`${API_URL}/api/orders/${orderId}/delivery`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
 
   const json = await response.json();
+
+  console.log("================================");
+  console.log(json);
+  console.log("================================");
   if (!response.ok) throw new Error(json.message || "Error obteniendo entrega");
-  return json.data;
+  return json;
+  // return json.data;
 }
 
 export async function updateDelivery(
@@ -123,13 +125,10 @@ export async function completeDelivery(orderId: string): Promise<Delivery> {
 
 export async function deleteDelivery(orderId: string): Promise<void> {
   const bakeryId = getBakeryId();
-  const response = await fetch(
-    `${API_URL}/api/orders/${orderId}/delivery?bakeryId=${bakeryId}`,
-    {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${getToken()}` },
-    },
-  );
+  const response = await fetch(`${API_URL}/api/orders/${orderId}/delivery`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
 
   const json = await response.json();
   if (!response.ok) throw new Error(json.message || "Error eliminando entrega");

@@ -6,7 +6,6 @@ import { useOrders } from "../hooks/useOrders";
 import { Order } from "../types/order.type";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 
-import Button from "@/components/ui/Button";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import Table from "@/components/ui/Table";
 import CreateOrderModal from "./CreateOrderModal";
@@ -15,7 +14,16 @@ import OrderDetailModal from "./OrderDetailModal";
 
 import { fetchProducts } from "@/features/products/services/products.service";
 import { fetchCustomers, createCustomer } from "../services/customers.service";
-import { createDelivery } from "../services/delivery.service";
+
+import {
+  Store,
+  Truck,
+  Eye,
+  Pencil,
+  MapPin,
+  CheckCircle2,
+  Trash2,
+} from "lucide-react";
 
 export function OrdersTable() {
   const {
@@ -67,9 +75,9 @@ export function OrdersTable() {
 
   if (loading)
     return (
-      <div className="py-24 flex flex-col items-center justify-center space-y-3">
-        <div className="w-9 h-9 border-4 border-[#472D20] border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm font-medium text-stone-500">
+      <div className="py-12 flex flex-col items-center justify-center space-y-3">
+        <div className="w-8 h-8 border-4 border-[#472D20] border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-stone-500">
           Cargando pedidos de la panadería...
         </p>
       </div>
@@ -77,7 +85,7 @@ export function OrdersTable() {
 
   if (error)
     return (
-      <div className="bg-red-50 border border-red-200 text-sm rounded-xl p-5 text-center text-red-600 max-w-2xl mx-auto my-8">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center text-red-600 max-w-2xl mx-auto my-8">
         {error}
       </div>
     );
@@ -107,7 +115,7 @@ export function OrdersTable() {
           onClick={() => setModalCrear(true)}
           className="bg-[#472D20] hover:bg-[#362117] text-white font-bold px-6 py-3 rounded-xl transition shadow-sm whitespace-nowrap self-start sm:self-center text-sm tracking-wide"
         >
-          Agregar Pedido
+          + Agregar Pedido
         </button>
       </div>
 
@@ -115,105 +123,210 @@ export function OrdersTable() {
         Historial de Pedidos
       </h2>
 
-      <div className="bg-white rounded-2xl border border-stone-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table headers={tableHeaders}>
-            {orders.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="text-center py-16 text-stone-400 text-sm italic"
+      <div className="flex flex-col gap-3 md:hidden">
+        {orders.length === 0 ? (
+          <div className="p-8 text-center rounded-xl bg-[#FFF8E0] border-2 border-dashed border-[#B8926B]">
+            <p className="text-sm font-semibold text-[#8C6D53]">
+              No hay pedidos registrados en el sistema.
+            </p>
+          </div>
+        ) : (
+          orders.map((order) => (
+            <div
+              key={order.id}
+              className="bg-[#FFF8E0] rounded-2xl border-2 border-[#B8926B] shadow-sm p-4 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="bg-[#FBEACE] text-[#472D20] text-xs font-bold px-2.5 py-1 rounded-md tracking-wider border border-[#B8926B]">
+                  {order.folio}
+                </span>
+                <OrderStatusBadge status={order.status} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="bg-[#FBEACE] rounded-xl py-2 border border-[#B8926B]">
+                  <p className="text-xs text-[#8C6D53] mb-0.5">Entrega</p>
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-[#472D20]">
+                    {order.delivery_type === "PICKUP" ? (
+                      <>
+                        <Store size={14} className="text-[#8C6D53]" /> Recoger
+                      </>
+                    ) : (
+                      <>
+                        <Truck size={14} className="text-amber-800" /> Envío
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="bg-[#FBEACE] rounded-xl py-2 border border-[#B8926B]">
+                  <p className="text-xs text-[#8C6D53] mb-0.5">Total</p>
+                  <p className="font-bold text-base font-mono text-[#472D20]">
+                    ${order.total.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-xs text-stone-600 text-center font-medium">
+                Fecha prometida:{" "}
+                <span className="font-bold text-[#472D20]">
+                  {order.delivery_date}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                <button
+                  onClick={() => setDetalle(order)}
+                  className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#FBEACE] hover:bg-[#EAD9B6] text-[#472D20] border border-[#B8926B] text-xs font-semibold transition shadow-xs"
                 >
-                  No hay pedidos registrados en el sistema.
+                  <Eye size={12} className="text-[#8C6D53]" /> Detalle
+                </button>
+                <button
+                  onClick={() => setEditando(order)}
+                  className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white hover:bg-stone-50 text-stone-700 border border-[#D9C3A9] text-xs font-semibold transition shadow-xs"
+                >
+                  <Pencil size={12} className="text-[#8C6D53]" /> Editar
+                </button>
+                {order.delivery_type === "DELIVERY" && (
+                  <button
+                    onClick={() =>
+                      router.push(`/orders/delivery?orderId=${order.id}`)
+                    }
+                    className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition shadow-xs"
+                  >
+                    <MapPin size={12} /> Ruta
+                  </button>
+                )}
+                {order.status === "READY" && (
+                  <button
+                    onClick={() => setConvirtiendo(order)}
+                    className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold transition shadow-xs"
+                  >
+                    <CheckCircle2 size={12} /> Vender
+                  </button>
+                )}
+                {["PENDING", "CANCELLED"].includes(order.status) && (
+                  <button
+                    onClick={() => setEliminando(order)}
+                    className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-semibold transition shadow-xs"
+                  >
+                    <Trash2 size={12} /> Eliminar
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden md:block overflow-hidden bg-[#FFF8E0] rounded-xl shadow-md border-2 border-[#B8926B]">
+        <Table headers={tableHeaders}>
+          {orders.length === 0 ? (
+            <tr>
+              <td
+                colSpan={6}
+                className="text-center py-12 text-[#8C6D53] font-semibold bg-[#FFF8E0]"
+              >
+                No hay pedidos registrados en el sistema.
+              </td>
+            </tr>
+          ) : (
+            orders.map((order) => (
+              <tr
+                key={order.id}
+                className="border-b border-[#EAD9B6] last:border-none hover:bg-[#FBEACE]/50 transition-colors"
+              >
+                <td className="px-6 py-4">
+                  <span className="bg-[#FBEACE] text-[#472D20] text-xs font-bold px-2.5 py-1 rounded-md tracking-wider border border-[#B8926B]">
+                    {order.folio}
+                  </span>
+                </td>
+
+                <td className="px-6 py-4">
+                  <OrderStatusBadge status={order.status} />
+                </td>
+
+                <td className="px-6 py-4 text-[#472D20] text-sm font-medium">
+                  {order.delivery_type === "PICKUP" ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FBEACE] border border-[#B8926B] text-xs font-semibold text-[#472D20]">
+                      <Store size={14} className="text-[#8C6D53]" />
+                      <span>Recoger</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800">
+                      <Truck size={14} />
+                      <span>Envío</span>
+                    </span>
+                  )}
+                </td>
+
+                <td className="px-6 py-4 text-[#5A2E1F] text-sm font-medium">
+                  {order.delivery_date}
+                </td>
+
+                <td className="px-6 py-4 font-bold text-[#472D20] text-base font-mono">
+                  ${order.total.toFixed(2)}
+                </td>
+
+                <td className="px-6 py-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <button
+                      title="Detalle"
+                      onClick={() => setDetalle(order)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-[#FBEACE] hover:bg-[#EAD9B6] text-[#472D20] border border-[#B8926B] rounded-lg transition-colors shadow-xs"
+                    >
+                      <Eye size={14} className="text-[#8C6D53]" />
+                      <span>Detalle</span>
+                    </button>
+
+                    <button
+                      title="Editar"
+                      onClick={() => setEditando(order)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-stone-50 hover:bg-[#EAD9B6] text-stone-700 rounded-lg transition-colors border border-[#D9C3A9] shadow-xs"
+                    >
+                      <Pencil size={14} className="text-[#8C6D53]" />
+                      <span>Editar</span>
+                    </button>
+
+                    {order.delivery_type === "DELIVERY" && (
+                      <button
+                        title="Ruta"
+                        onClick={() =>
+                          router.push(`/orders/delivery?orderId=${order.id}`)
+                        }
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition-colors border border-amber-200 shadow-xs"
+                      >
+                        <MapPin size={14} />
+                        <span>Ruta</span>
+                      </button>
+                    )}
+
+                    {order.status === "READY" && (
+                      <button
+                        title="Vender"
+                        onClick={() => setConvirtiendo(order)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition-colors border border-emerald-200 shadow-xs"
+                      >
+                        <CheckCircle2 size={14} />
+                        <span>Vender</span>
+                      </button>
+                    )}
+
+                    {["PENDING", "CANCELLED"].includes(order.status) && (
+                      <button
+                        title="Eliminar"
+                        onClick={() => setEliminando(order)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200 shadow-xs"
+                      >
+                        <Trash2 size={14} />
+                        <span>Eliminar</span>
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
-            ) : (
-              orders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="border-b border-stone-100 last:border-b-0 hover:bg-[#FAF6F0]/40 transition-colors"
-                >
-                  <td className="px-4 py-4.5 vertical-middle">
-                    <span className="bg-stone-100 text-stone-800 text-xs font-bold px-2.5 py-1 rounded-md tracking-wider">
-                      {order.folio}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-4.5 vertical-middle">
-                    <OrderStatusBadge status={order.status} />
-                  </td>
-
-                  <td className="px-4 py-4.5 text-stone-600 text-sm font-medium vertical-middle">
-                    {order.delivery_type === "PICKUP" ? (
-                      <span className="flex items-center gap-1.5">
-                        🏠 Recoger
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5 text-amber-800">
-                        🚚 Envío
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="px-4 py-4.5 text-stone-600 text-sm vertical-middle">
-                    {order.delivery_date}
-                  </td>
-
-                  <td className="px-4 py-4.5 font-bold text-stone-900 text-sm vertical-middle">
-                    ${order.total.toFixed(2)}
-                  </td>
-
-                  <td className="px-4 py-4.5 vertical-middle">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <button
-                        onClick={() => setDetalle(order)}
-                        className="text-xs font-semibold px-3 py-1.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-600 rounded-lg transition"
-                      >
-                        Detalle
-                      </button>
-
-                      <button
-                        onClick={() => setEditando(order)}
-                        className="text-xs font-semibold px-3 py-1.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-600 rounded-lg transition"
-                      >
-                        Editar
-                      </button>
-
-                      {order.delivery_type === "DELIVERY" && (
-                        <button
-                          onClick={() =>
-                            router.push(`/orders/delivery?orderId=${order.id}`)
-                          }
-                          className="text-xs font-semibold px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 rounded-lg transition"
-                        >
-                          📦 Ruta
-                        </button>
-                      )}
-
-                      {order.status === "READY" && (
-                        <button
-                          onClick={() => setConvirtiendo(order)}
-                          className="text-xs font-bold px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg transition"
-                        >
-                          Vender
-                        </button>
-                      )}
-
-                      {["PENDING", "CANCELLED"].includes(order.status) && (
-                        <button
-                          onClick={() => setEliminando(order)}
-                          className="text-xs font-semibold px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 rounded-lg transition"
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </Table>
-        </div>
+            ))
+          )}
+        </Table>
       </div>
 
       <CreateOrderModal
@@ -221,37 +334,12 @@ export function OrdersTable() {
         onClose={() => setModalCrear(false)}
         onSuccess={async (payload) => {
           try {
-            const response = await handleCreateOrder(payload);
-
-            if (payload.deliveryType === "DELIVERY" && payload.deliveryData) {
-              const orderId = (response as any)?.data?.id || response?.id;
-              if (!orderId) {
-                throw new Error(
-                  "No se pudo obtener el ID de la orden creada para el envío.",
-                );
-              }
-
-              const estimatedDeliveryIso =
-                payload.deliveryDate && payload.deliveryTime
-                  ? new Date(
-                      `${payload.deliveryDate}T${payload.deliveryTime}`,
-                    ).toISOString()
-                  : new Date().toISOString();
-
-              await createDelivery(orderId, {
-                address: payload.deliveryData.address,
-                recipient_name: payload.deliveryData.recipient_name,
-                recipient_phone: payload.deliveryData.recipient_phone,
-                status: payload.deliveryData.status || "PENDING",
-                notes: payload.deliveryData.notes || "",
-                estimated_delivery: estimatedDeliveryIso as any,
-              });
-            }
+            await handleCreateOrder(payload);
 
             setModalCrear(false);
             loadOrders();
           } catch (error: any) {
-            console.error("❌ Error en el flujo de creación:", error);
+            console.error("Error en el flujo de creación:", error);
             alert(error.message || "Ocurrió un error al procesar el pedido.");
           }
         }}

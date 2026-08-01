@@ -1,14 +1,19 @@
 "use client";
 
-import { ArrowLeft, ShoppingCart, Trash2 } from "lucide-react";
-import Button from "@/components/ui/Button";
-import { CartItem } from "../types/cart.type";
+import { Trash2, ShoppingCart, ArrowLeft, Plus, Minus } from "lucide-react";
 
-interface Props {
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+interface CartProps {
   items: CartItem[];
   total: number;
   loading: boolean;
-
   onCheckout: () => void;
   onContinueShopping: () => void;
   onClearCart: () => void;
@@ -23,120 +28,127 @@ export default function Cart({
   onContinueShopping,
   onClearCart,
   onRemoveItem,
-}: Props) {
+}: CartProps) {
   return (
-    <div className="w-full max-w-4xl mx-auto bg-[#FFFCF5] rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
-      <div className="bg-[#472D20] px-6 py-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">Resumen de Venta</h2>
-
-        <span className="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-semibold">
-          {items.reduce((acc, item) => acc + item.quantity, 0)} productos
-        </span>
+    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-[#D9C3A9] overflow-hidden">
+      <div className="bg-[#4A3525] px-6 py-5 text-white flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ShoppingCart size={22} className="text-[#EAD9B6]" />
+          <h1 className="text-lg font-bold tracking-wide">
+            Carrito de Compras
+          </h1>
+        </div>
+        <button
+          onClick={onContinueShopping}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors text-[#F8F1E4]"
+        >
+          <ArrowLeft size={14} />
+          <span>Seguir comprando</span>
+        </button>
       </div>
 
-      <div className="p-6 space-y-4 max-h-[500px] overflow-y-auto">
+      <div className="p-6 space-y-6">
         {items.length === 0 ? (
-          <div className="py-14 text-center">
-            <ShoppingCart size={52} className="mx-auto text-stone-300 mb-3" />
-
-            <p className="text-stone-400 font-medium">
-              No hay productos en el carrito.
+          <div className="py-12 text-center rounded-xl bg-[#FAF4ED] border border-dashed border-[#D9C3A9]">
+            <ShoppingCart
+              size={40}
+              className="mx-auto text-[#8C6D53] mb-3 opacity-50"
+            />
+            <p className="text-sm font-medium text-[#7C5A42]">
+              Tu carrito está vacío.
             </p>
+            <button
+              onClick={onContinueShopping}
+              className="mt-4 px-4 py-2 text-xs font-bold bg-[#4A3525] text-white rounded-xl hover:bg-[#3B281A] transition-colors shadow-sm"
+            >
+              Agregar productos
+            </button>
           </div>
         ) : (
-          items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between border border-stone-200 rounded-2xl p-4 hover:shadow-md transition"
-            >
-              <div className="flex items-center gap-5">
-                <div className="w-24 h-24 rounded-xl overflow-hidden border bg-stone-100 shrink-0">
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-stone-400">
-                      Sin foto
+          <>
+            <div className="divide-y divide-[#EFE7DE] max-h-96 overflow-y-auto pr-1">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-[#FAF4ED] border border-[#D9C3A9] flex items-center justify-center shrink-0 overflow-hidden">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ShoppingCart size={20} className="text-[#8C6D53]" />
+                      )}
                     </div>
-                  )}
+                    <div>
+                      <h3 className="text-sm font-bold text-[#4A3525]">
+                        {item.name}
+                      </h3>
+                      <p className="text-xs text-[#7C5A42] font-mono mt-0.5">
+                        ${item.price.toFixed(2)} c/u
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm font-bold text-[#3B281A] font-mono">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </div>
+
+                    <span className="px-3 py-1 rounded-lg bg-[#FAF4ED] border border-[#D9C3A9] text-xs font-semibold text-[#4A3525]">
+                      Cant: {item.quantity}
+                    </span>
+
+                    <button
+                      onClick={() => onRemoveItem(item.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+                      title="Eliminar producto"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
 
+            <div className="border-t border-[#D9C3A9] pt-6 space-y-4">
+              <div className="bg-[#FFFCF5] border border-[#D9C3A9] rounded-2xl p-5 flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-stone-900">
-                    {item.name}
-                  </h3>
-
-                  <p className="text-sm text-stone-500">{item.description}</p>
-
-                  <p className="mt-2 text-lg font-bold text-[#472D20]">
-                    ${item.price.toFixed(2)}
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#7C5A42]">
+                    Total a Pagar
+                  </p>
+                  <p className="text-xs text-[#8C6D53] mt-0.5">
+                    Impuestos incluidos
                   </p>
                 </div>
+                <div className="text-2xl font-extrabold text-[#3B281A] font-mono">
+                  ${total.toFixed(2)}
+                </div>
               </div>
 
-              <div className="flex flex-col items-end gap-3">
+              <div className="flex items-center justify-between pt-2">
                 <button
-                  onClick={() => onRemoveItem(item.id)}
-                  className="text-red-500 hover:text-red-700 transition"
-                  title="Eliminar producto"
+                  onClick={onClearCart}
+                  className="px-4 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-200"
                 >
-                  <Trash2 size={22} />
+                  Vaciar carrito
                 </button>
 
-                <p className="text-2xl font-bold text-[#472D20]">
-                  x{item.quantity}
-                </p>
-
-                <p className="text-xl font-bold">
-                  ${(item.price * item.quantity).toFixed(2)}
-                </p>
+                <button
+                  onClick={onCheckout}
+                  disabled={loading}
+                  className="px-6 py-3 bg-[#4A3525] hover:bg-[#3B281A] text-white text-xs font-bold rounded-xl transition-colors shadow-md disabled:opacity-50"
+                >
+                  {loading ? "Procesando..." : "Proceder al Pago"}
+                </button>
               </div>
             </div>
-          ))
+          </>
         )}
-      </div>
-
-      <div className="border-t border-stone-200 px-6 py-4 flex flex-wrap justify-between gap-3">
-        <Button
-          variant="secondary"
-          onClick={onContinueShopping}
-          className="flex items-center gap-2 px-5 py-3"
-        >
-          <ArrowLeft size={18} />
-          Continuar comprando
-        </Button>
-
-        <Button
-          variant="danger"
-          disabled={items.length === 0}
-          onClick={onClearCart}
-          className="flex items-center gap-2 px-5 py-3"
-        >
-          <Trash2 size={18} />
-          Vaciar carrito
-        </Button>
-      </div>
-
-      {/* Footer */}
-      <div className="border-t border-stone-100 p-6 flex justify-between items-center">
-        <div>
-          <p className="text-sm uppercase text-stone-500">Total</p>
-
-          <p className="text-3xl font-black text-[#472D20]">
-            ${total.toFixed(2)}
-          </p>
-        </div>
-
-        <Button
-          className="w-60 h-22"
-          disabled={items.length === 0 || loading}
-          onClick={onCheckout}
-        >
-          {loading ? "Procesando..." : "Proceder al pago"}
-        </Button>
       </div>
     </div>
   );

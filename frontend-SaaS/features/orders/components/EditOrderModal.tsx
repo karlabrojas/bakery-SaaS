@@ -1,6 +1,17 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Order } from "../types/order.type";
-import { updateOrder } from "../services/orders.service";
+import { changeOrderStatus, updateOrder } from "../services/orders.service";
+import {
+  X,
+  FileText,
+  Truck,
+  Calendar,
+  Clock,
+  MessageSquare,
+  DollarSign,
+} from "lucide-react";
 
 interface EditOrderModalProps {
   isOpen: boolean;
@@ -45,12 +56,15 @@ export default function EditOrderModal({
       setError("");
 
       await updateOrder(order.id, {
-        status,
         deliveryType: deliveryType,
         deliveryDate: deliveryDate,
         deliveryTime: deliveryTime,
         notes,
       });
+
+      if (status !== order.status) {
+        await changeOrderStatus(order.id, status);
+      }
 
       await onSuccess();
       onClose();
@@ -64,7 +78,7 @@ export default function EditOrderModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-[#FFFDF9] rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         <div className="relative bg-[#472D20] px-6 py-5 rounded-t-2xl flex justify-between items-start sticky top-0 z-10">
           <div>
             <h2 className="text-2xl font-bold text-white">Editar Pedido</h2>
@@ -73,9 +87,9 @@ export default function EditOrderModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-white/70 hover:text-white text-xl font-bold p-1 rounded-lg transition"
+            className="text-white/70 hover:text-white p-1 rounded-lg transition"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -90,80 +104,86 @@ export default function EditOrderModal({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-stone-50 rounded-xl p-5 border border-stone-200/40">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#FAF6F0] rounded-xl p-5 border border-[#EFE9DD]">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
-                  Estado actual
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-[#472D20]" /> Estado
+                  actual
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as any)}
-                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium"
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium text-stone-800 shadow-sm"
                 >
-                  <option value="PENDING">Pendiente ⏳</option>
-                  <option value="CONFIRMED">Confirmado 👍</option>
-                  <option value="IN_PRODUCTION">En producción 🥖</option>
-                  <option value="READY">Listo / Por Entregar 📦</option>
-                  <option value="DELIVERED">Entregado ✅</option>
-                  <option value="CANCELLED">Cancelado ❌</option>
+                  <option value="PENDING">Pendiente</option>
+                  <option value="CONFIRMED">Confirmado</option>
+                  <option value="IN_PRODUCTION">En producción</option>
+                  <option value="READY">Listo / Por Entregar</option>
+                  <option value="DELIVERED">Entregado</option>
+                  <option value="CANCELLED">Cancelado</option>
                 </select>
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
-                  Tipo de entrega
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1.5">
+                  <Truck className="w-3.5 h-3.5 text-[#472D20]" /> Tipo de
+                  entrega
                 </label>
                 <select
                   value={deliveryType}
                   onChange={(e) => setDeliveryType(e.target.value as any)}
-                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium"
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium text-stone-800 shadow-sm"
                 >
-                  <option value="PICKUP">🏠 Recoger en tienda</option>
-                  <option value="DELIVERY">🚚 Envío a domicilio</option>
+                  <option value="PICKUP">Recoger en tienda</option>
+                  <option value="DELIVERY">Envío a domicilio</option>
                 </select>
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
-                  Fecha de entrega
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#472D20]" /> Fecha de
+                  entrega
                 </label>
                 <input
                   type="date"
                   value={deliveryDate}
                   onChange={(e) => setDeliveryDate(e.target.value)}
-                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium"
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium text-stone-800 shadow-sm"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
-                  Hora de entrega
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#472D20]" /> Hora de
+                  entrega
                 </label>
                 <input
                   type="time"
                   value={deliveryTime}
                   onChange={(e) => setDeliveryTime(e.target.value)}
-                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium"
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium text-stone-800 shadow-sm"
                 />
               </div>
 
               <div className="flex flex-col gap-1 col-span-2">
-                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider">
-                  Notas / Observaciones
+                <label className="text-xs font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-[#472D20]" /> Notas
+                  / Observaciones
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
                   placeholder="Añade especificaciones sobre la entrega o la preparación..."
-                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium resize-none"
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#472D20] transition bg-white font-medium text-stone-800 shadow-sm resize-none"
                 />
               </div>
             </div>
 
-            <div className="flex justify-between items-center bg-amber-50/40 border border-amber-200/60 p-4 rounded-xl">
-              <span className="text-sm font-semibold text-stone-600">
-                Total acumulado del pedido:
+            <div className="flex justify-between items-center bg-white border border-[#EFE9DD] p-4 rounded-xl shadow-sm">
+              <span className="text-sm font-bold text-stone-600 flex items-center gap-1.5">
+                <DollarSign className="w-4 h-4 text-stone-500" /> Total
+                acumulado del pedido:
               </span>
               <span className="text-xl font-black text-[#472D20]">
                 ${order.total.toFixed(2)}
@@ -171,7 +191,7 @@ export default function EditOrderModal({
             </div>
           </div>
 
-          <div className="border-t border-stone-100 bg-stone-50/50 p-4 flex justify-end gap-3 sticky bottom-0">
+          <div className="border-t border-[#E6DEC9] bg-[#FAF6F0] p-4 flex justify-end gap-3 sticky bottom-0">
             <button
               type="button"
               onClick={onClose}

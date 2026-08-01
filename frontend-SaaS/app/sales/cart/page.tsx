@@ -41,11 +41,8 @@ export default function CartPage() {
       });
 
       localStorage.setItem("saleFolio", generateFolio());
-
       clearCart();
-
       setPaymentModalOpen(false);
-
       router.push("/sales/success");
     } catch (error) {
       console.error(error);
@@ -56,35 +53,27 @@ export default function CartPage() {
 
   const handleRemoveItem = (id: string) => {
     setConfirmTitle("Eliminar producto");
-
     setConfirmMessage(
       "¿Está seguro de que desea eliminar este producto del carrito?",
     );
-
     setConfirmButtonText("Eliminar");
-
     setConfirmAction(() => () => {
       removeItem(id);
       setConfirmOpen(false);
     });
-
     setConfirmOpen(true);
   };
 
   const handleClearCart = () => {
     setConfirmTitle("Vaciar carrito");
-
     setConfirmMessage(
       "¿Está seguro de que desea eliminar todos los productos del carrito?",
     );
-
     setConfirmButtonText("Vaciar carrito");
-
     setConfirmAction(() => () => {
       clearCart();
       setConfirmOpen(false);
     });
-
     setConfirmOpen(true);
   };
 
