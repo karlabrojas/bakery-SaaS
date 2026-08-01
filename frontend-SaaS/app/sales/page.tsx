@@ -17,19 +17,21 @@ export default function SalesPage() {
 
   return (
     <>
-
       <main className="p-6 ">
         <section className="flex flex-row ">
           <div>
             <h1 className="text-5xl font-bold mb-4"> Gestión de Ventas</h1>
             <p className="text-lg">
-              En este apartado puedes gestionar todas las ventas de tu panadería.
+              En este apartado puedes gestionar todas las ventas de tu
+              panadería.
             </p>
           </div>
           <div className="ml-auto">
-            
-            <Button className="ml-5" onClick={() => router.push("/sales/new-sales")}>
-              Agregar Venta
+            <Button
+              className="ml-5"
+              onClick={() => router.push("/sales/new-sales")}
+            >
+              + Agregar Venta
             </Button>
           </div>
         </section>
@@ -37,8 +39,6 @@ export default function SalesPage() {
           <HistoryPage />
         </section>
       </main>
-
-
     </>
   );
 }

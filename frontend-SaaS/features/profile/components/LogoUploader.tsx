@@ -43,7 +43,6 @@ export default function LogoUploader({
     <div className="flex flex-col items-center gap-5">
       <Avatar logoUrl={preview || logoUrl} bakeryName={bakeryName} size={150} />
 
-      {/* Usamos tu Button global. Le pasamos flex para alinear el icono */}
       <Button
         onClick={handleClick}
         disabled={uploading}

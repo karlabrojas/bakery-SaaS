@@ -4,10 +4,10 @@ import React, { useState, useEffect } from "react";
 import DeliveryForm from "./Delivery/DeliveryForm";
 import { PaymentMethod } from "../types/payment.type";
 
-import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import AdvancePaymentForm from "./Payment/AdvancePaymentForm";
+import { Store, Truck } from "lucide-react";
 
 interface Product {
   id: string;
@@ -71,7 +71,7 @@ export default function CreateOrderModal({
   const [loading, setLoading] = useState(false);
 
   const totalOrden = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => acc + item.price * (item.quantity || 0),
     0,
   );
   const restanteOrden = Math.max(0, totalOrden - paymentAmount);
@@ -101,11 +101,12 @@ export default function CreateOrderModal({
 
   const agregarProducto = () => {
     if (!products || products.length === 0) return;
+
     setItems((prev) => [
       ...prev,
       {
         productId: products[0].id,
-        quantity: 1,
+        quantity: 0,
         name: products[0].name,
         price: products[0].price,
       },
@@ -133,7 +134,12 @@ export default function CreateOrderModal({
   const actualizarCantidad = (index: number, quantity: number) => {
     setItems((prev) =>
       prev.map((item, i) =>
-        i === index ? { ...item, quantity: Math.max(1, quantity) } : item,
+        i === index
+          ? {
+              ...item,
+              quantity: isNaN(quantity) ? 0 : quantity,
+            }
+          : item,
       ),
     );
   };
@@ -184,6 +190,11 @@ export default function CreateOrderModal({
     }
     if (paymentAmount > totalOrden) {
       alert("El monto del anticipo no puede ser mayor al total de la orden.");
+      return;
+    }
+
+    if (items.some((item) => !item.quantity || item.quantity <= 0)) {
+      alert("Todos los productos añadidos deben tener una cantidad mayor a 0.");
       return;
     }
 
@@ -315,16 +326,25 @@ export default function CreateOrderModal({
                   <label className="block text-xs font-semibold text-stone-600">
                     Tipo de entrega *
                   </label>
-                  <Select
-                    value={deliveryType}
-                    onChange={(e) =>
-                      setDeliveryType(e.target.value as "PICKUP" | "DELIVERY")
-                    }
-                    className="w-full bg-white"
-                  >
-                    <option value="PICKUP">🏠 Recoger en tienda</option>
-                    <option value="DELIVERY">🚚 Envío a domicilio</option>
-                  </Select>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8C6D53]">
+                      {deliveryType === "PICKUP" ? (
+                        <Store size={16} />
+                      ) : (
+                        <Truck size={16} />
+                      )}
+                    </div>
+                    <Select
+                      value={deliveryType}
+                      onChange={(e) =>
+                        setDeliveryType(e.target.value as "PICKUP" | "DELIVERY")
+                      }
+                      className="w-full bg-white pl-10"
+                    >
+                      <option value="PICKUP">Recoger en tienda</option>
+                      <option value="DELIVERY">Envío a domicilio</option>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-stone-600">
@@ -357,7 +377,6 @@ export default function CreateOrderModal({
                   <h3 className="font-bold text-[#472D20] text-xs uppercase tracking-wider">
                     Dirección de Destino
                   </h3>
-                  {/* El callback del Form actualiza el estado local correctamente */}
                   <DeliveryForm onChange={setDeliveryData} />
                 </div>
               )}
@@ -408,20 +427,21 @@ export default function CreateOrderModal({
                         <div className="w-24">
                           <Input
                             type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) =>
+                            min="0"
+                            value={item.quantity === 0 ? "" : item.quantity}
+                            onChange={(e) => {
+                              const val = e.target.value;
                               actualizarCantidad(
                                 index,
-                                parseInt(e.target.value) || 1,
-                              )
-                            }
+                                val === "" ? 0 : Number(val),
+                              );
+                            }}
                             className="w-full text-center font-bold"
                           />
                         </div>
 
                         <span className="text-sm font-bold text-[#472D20] w-24 text-right whitespace-nowrap">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ${(item.price * (item.quantity || 0)).toFixed(2)}
                         </span>
 
                         <button

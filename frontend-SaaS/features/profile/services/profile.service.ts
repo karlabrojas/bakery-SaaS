@@ -4,88 +4,82 @@ import {
   UpdateUserDto,
 } from "../types/profile.type";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const api = process.env.NEXT_PUBLIC_API_URL;
 
-class ProfileService {
-  private getHeaders() {
-    const token = localStorage.getItem("accessToken");
+const getToken = () => localStorage.getItem("accessToken");
 
-    return {
-      Authorization: `Bearer ${token}`,
-    };
+export async function fetchProfile(): Promise<ProfileResponse> {
+  const res = await fetch(`${api}/api/profile`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Error al obtener el perfil");
   }
 
-  async getProfile(): Promise<ProfileResponse> {
-    const response = await fetch(`${API_URL}/api/profile`, {
-      headers: this.getHeaders(),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message);
-    }
-
-    return data;
-  }
-
-  async updateUser(body: UpdateUserDto) {
-    const response = await fetch(`${API_URL}/api/profile/user`, {
-      method: "PATCH",
-      headers: {
-        ...this.getHeaders(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message);
-    }
-
-    return data.user;
-  }
-
-  async updateBakery(body: UpdateBakeryDto) {
-    const response = await fetch(`${API_URL}/api/profile/bakery`, {
-      method: "PATCH",
-      headers: {
-        ...this.getHeaders(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message);
-    }
-
-    return data.bakery;
-  }
-
-  async updateLogo(file: File) {
-    const formData = new FormData();
-
-    formData.append("logo", file);
-
-    const response = await fetch(`${API_URL}/api/profile/logo`, {
-      method: "PATCH",
-      headers: this.getHeaders(),
-      body: formData,
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message);
-    }
-
-    return data.bakery;
-  }
+  return json;
 }
 
-export const profileService = new ProfileService();
+export async function updateUser(data: UpdateUserDto) {
+  const res = await fetch(`${api}/api/profile/user`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Error al actualizar usuario");
+  }
+
+  return json.user;
+}
+
+export async function updateBakery(data: UpdateBakeryDto) {
+  const res = await fetch(`${api}/api/profile/bakery`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Error al actualizar la panadería");
+  }
+
+  return json.bakery;
+}
+
+export async function updateLogo(file: File) {
+  const formData = new FormData();
+
+  formData.append("logo", file);
+
+  const res = await fetch(`${api}/api/profile/logo`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: formData,
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Error al actualizar el logo");
+  }
+
+  return json.bakery;
+}

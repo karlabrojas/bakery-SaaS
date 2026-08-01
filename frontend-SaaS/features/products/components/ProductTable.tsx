@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Tag, ChevronDown } from "lucide-react";
+import { Tag, ChevronDown, Edit, Trash2, Power, PowerOff } from "lucide-react";
 
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { Product } from "@/features/products/types/product.type";
@@ -128,7 +128,7 @@ export default function InventoryTable() {
           <select
             value={categoriaSeleccionada}
             onChange={(e) => setCategoriaSeleccionada(e.target.value)}
-            className="w-full sm:min-w-44 pl-10 pr-9 py-3.5 text-sm text-stone-700bg-[#fdf6ec] border border-[#e8d5b7] rounded-xl appearance-none cursor-pointer focus:outline-none focus:border-[#472D20] transition"
+            className="w-full sm:min-w-44 pl-10 pr-9 py-3.5 text-sm text-stone-700 bg-[#fdf6ec] border border-[#e8d5b7] rounded-xl appearance-none cursor-pointer focus:outline-none focus:border-[#472D20] transition"
           >
             <option value="">Todas las categorías</option>
             <option value="pan_dulce">Pan dulce</option>
@@ -150,8 +150,6 @@ export default function InventoryTable() {
           </Button>
         </div>
       </div>
-
-      {/* Tabla */}
 
       <div className="overflow-hidden bg-white rounded-xl shadow-sm border border-stone-100">
         <Table
@@ -182,8 +180,6 @@ export default function InventoryTable() {
                     : "bg-red-50/30 hover:bg-red-50/50 opacity-70"
                 }`}
               >
-                {/* Imagen */}
-
                 <td className="px-4 py-3">
                   <div className="w-16 h-16 rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
                     {product.imageUrl ? (
@@ -233,16 +229,20 @@ export default function InventoryTable() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setEditando(product)}
-                      className="px-3 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-[#EAD9B6] text-[#6B3118] rounded-lg transition-colors border border-stone-200"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-[#EAD9B6] text-[#6B3118] rounded-lg transition-colors border border-stone-200"
+                      title="Editar"
                     >
-                      Editar
+                      <Edit size={14} />
+                      <span>Editar</span>
                     </button>
 
                     <button
                       onClick={() => setEliminando(product)}
-                      className="px-3 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200"
+                      title="Eliminar"
                     >
-                      Eliminar
+                      <Trash2 size={14} />
+                      <span>Eliminar</span>
                     </button>
 
                     <button
@@ -251,13 +251,21 @@ export default function InventoryTable() {
                           ? setDesactivando(product)
                           : setActivando(product)
                       }
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
                         product.is_active
                           ? "bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
                           : "bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
                       }`}
+                      title={product.is_active ? "Desactivar" : "Activar"}
                     >
-                      {product.is_active ? "Desactivar" : "Activar"}
+                      {product.is_active ? (
+                        <PowerOff size={14} />
+                      ) : (
+                        <Power size={14} />
+                      )}
+                      <span>
+                        {product.is_active ? "Desactivar" : "Activar"}
+                      </span>
                     </button>
                   </div>
                 </td>

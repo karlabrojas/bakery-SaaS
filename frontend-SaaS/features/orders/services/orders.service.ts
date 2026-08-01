@@ -38,7 +38,7 @@ export async function createOrder(data: CreateOrderDTO): Promise<Order> {
 
 export async function updateOrder(
   id: string,
-  data: UpdateOrderDTO, // ⚡ Cambiado aquí
+  data: UpdateOrderDTO,
 ): Promise<Order> {
   const res = await fetch(`${api}/api/orders/${id}`, {
     method: "PUT",

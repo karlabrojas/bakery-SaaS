@@ -29,11 +29,8 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
           w-[95%]
           max-w-md
           rounded-2xl
-          bg-[#FFF8E0]
-          p-6
-          shadow-xl
-          border-2
-          border-[#B8926B]
+          bg-white
+          shadow-2xl
           overflow-hidden
         "
       >
@@ -48,7 +45,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
             w-8
             h-8
             rounded-full
-            bg-[#FBEACE]
+            bg-[#FFFCF5]
             hover:bg-[#EAD9B6]
             text-[#472D20]
             border

@@ -20,7 +20,7 @@ interface Props {
 export default function BakeryCard({ bakery, onSave, onUpload }: Props) {
   return (
     <Card className="p-0 overflow-hidden bg-[#FFFDF9]">
-      <div className="flex items-center gap-3 bg-[#6B3118] px-6 py-4">
+      <div className="flex items-center gap-3 bg-[#472D20] px-6 py-4">
         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
           <Building2 className="text-[#6B3118]" size={20} />
         </div>

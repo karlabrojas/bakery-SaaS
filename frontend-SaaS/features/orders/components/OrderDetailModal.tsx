@@ -11,8 +11,17 @@ import { OrderStatusBadge } from "./OrderStatusBadge";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { fetchProducts } from "@/features/products/services/products.service";
 import { fetchCustomers } from "../services/customers.service";
-import DeliveryStatusBadge from "./Delivery/DeliveryStatusBagde";
-import { useDeliveries } from "../hooks/useDeliveries";
+import {
+  X,
+  Home,
+  Truck,
+  CheckCircle2,
+  AlertTriangle,
+  DollarSign,
+  MessageSquare,
+  ArrowRight,
+  Clock,
+} from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -67,7 +76,6 @@ export default function OrderDetailModal({
 
   const [products, setProducts] = useState<ProductCatalog[]>([]);
   const [customers, setCustomers] = useState<CustomerCatalog[]>([]);
-  const { delivery, loadDelivery } = useDeliveries();
 
   useEffect(() => {
     if (!isOpen || !order?.id) return;
@@ -86,8 +94,6 @@ export default function OrderDetailModal({
       .finally(() => {
         if (isMounted) setLoadingHistory(false);
       });
-
-    loadDelivery(order.id);
 
     fetchProducts()
       .then((data) => {
@@ -160,21 +166,16 @@ export default function OrderDetailModal({
     }
   };
 
-  const deliveryData = delivery as any;
-
   return (
     <>
-      {/* Backdrop de fondo */}
       <div
         onClick={onClose}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       >
-        {/* Contenedor Principal del Modal */}
         <div
           onClick={(e) => e.stopPropagation()}
           className="relative bg-[#FFFDF9] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
         >
-          {/* Cabecera Fija (Color Café Sólido) */}
           <div className="relative bg-[#472D20] px-6 py-5 flex justify-between items-start sticky top-0 z-10">
             <div>
               <h2 className="text-2xl font-bold text-white tracking-tight">
@@ -187,15 +188,13 @@ export default function OrderDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="text-white/80 hover:text-white text-xl font-bold p-1 rounded-lg transition-colors duration-150"
+              className="text-white/80 hover:text-white p-1 rounded-lg transition-colors duration-150"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Cuerpo con Scroll Autónomo */}
           <div className="flex-1 overflow-y-auto space-y-6 p-6">
-            {/* Grid de Datos del Pedido */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#FAF6F0] rounded-xl p-5 border border-[#EFE9DD]">
               <div>
                 <p className="text-xs font-bold uppercase text-stone-500 tracking-wider">
@@ -210,97 +209,21 @@ export default function OrderDetailModal({
                 <p className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                   Tipo de entrega
                 </p>
-                <p className="mt-1 text-sm font-semibold text-stone-800">
-                  {order.delivery_type === "PICKUP"
-                    ? "🏠 Recoger en tienda"
-                    : "🚚 Envío a domicilio"}
+                <p className="mt-1 text-sm font-semibold text-stone-800 flex items-center gap-1.5">
+                  {order.delivery_type === "PICKUP" ? (
+                    <>
+                      <Home className="w-4 h-4 text-[#472D20]" /> Recoger en
+                      tienda
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="w-4 h-4 text-[#472D20]" /> Envío a
+                      domicilio
+                    </>
+                  )}
                 </p>
               </div>
 
-              {/* Bloque condicional si requiere Delivery */}
-              {deliveryData && order.delivery_type === "DELIVERY" && (
-                <div className="col-span-1 md:col-span-2 border-t border-[#E6DEC9] pt-4 mt-2">
-                  <h3 className="text-xs font-bold uppercase text-stone-500 tracking-wider mb-4">
-                    Información de la entrega
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-bold uppercase text-stone-500">
-                        Estado
-                      </p>
-                      <div className="mt-1">
-                        <DeliveryStatusBadge status={deliveryData.status} />
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-bold uppercase text-stone-500">
-                        Fecha estimada
-                      </p>
-                      <p className="mt-1 text-sm text-stone-800">
-                        {deliveryData.estimated_delivery
-                          ? new Date(
-                              deliveryData.estimated_delivery,
-                            ).toLocaleString("es-MX")
-                          : "No definida"}
-                      </p>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <p className="text-xs font-bold uppercase text-stone-500">
-                        Dirección de entrega
-                      </p>
-                      <p className="mt-1 text-sm text-stone-800">
-                        {deliveryData.address || "Sin dirección"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-bold uppercase text-stone-500">
-                        Destinatario
-                      </p>
-                      <p className="mt-1 text-sm text-stone-800">
-                        {deliveryData.recipient_name || "No registrado"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-bold uppercase text-stone-500">
-                        Teléfono
-                      </p>
-                      <p className="mt-1 text-sm text-stone-800">
-                        {deliveryData.recipient_phone || "No registrado"}
-                      </p>
-                    </div>
-
-                    {deliveryData.delivery_at && (
-                      <div>
-                        <p className="text-xs font-bold uppercase text-stone-500">
-                          Entregado el
-                        </p>
-                        <p className="mt-1 text-sm text-stone-800">
-                          {new Date(deliveryData.delivery_at).toLocaleString(
-                            "es-MX",
-                          )}
-                        </p>
-                      </div>
-                    )}
-
-                    {deliveryData.notes && (
-                      <div className="md:col-span-2">
-                        <p className="text-xs font-bold uppercase text-stone-500">
-                          Indicaciones
-                        </p>
-
-                        <div className="mt-1 rounded-lg border border-[#EFE9DD] bg-white p-3 text-sm text-stone-700">
-                          {deliveryData.notes}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
               <div className="border-t border-[#E6DEC9]/60 md:border-t-0 pt-2 md:pt-0">
                 <p className="text-xs font-bold uppercase text-stone-500 tracking-wider">
                   Fecha de entrega
@@ -349,7 +272,6 @@ export default function OrderDetailModal({
               )}
             </div>
 
-            {/* Lista de Productos */}
             <div className="space-y-2">
               <h3 className="text-xs font-bold uppercase text-stone-600 tracking-wider">
                 Productos del pedido
@@ -376,7 +298,6 @@ export default function OrderDetailModal({
               </div>
             </div>
 
-            {/* Módulo de Cambio de Estado Rápido */}
             {transicionesDisponibles.length > 0 && (
               <div className="space-y-3 bg-[#FAF6F0] p-4 border border-[#EFE9DD] rounded-xl">
                 <h3 className="text-xs font-bold uppercase text-stone-600 tracking-wider">
@@ -408,14 +329,16 @@ export default function OrderDetailModal({
                 </div>
 
                 {exitoStatus && (
-                  <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-xl text-center font-semibold">
-                    ✓ Estado actualizado correctamente
+                  <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-xl text-center font-semibold flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" /> Estado actualizado
+                    correctamente
                   </div>
                 )}
                 {errorStatus && (
-                  <p className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-xl text-center font-semibold">
-                    ⚠️ {errorStatus}
-                  </p>
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-xl text-center font-semibold flex items-center justify-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-600" />{" "}
+                    {errorStatus}
+                  </div>
                 )}
 
                 <button
@@ -433,18 +356,16 @@ export default function OrderDetailModal({
               </div>
             )}
 
-            {/* Acción Especial: Convertir a Venta */}
             {order.status === "READY" && (
               <button
                 type="button"
                 onClick={() => setConfirmarConvertir(true)}
-                className="w-full h-12 text-sm font-bold bg-green-700 text-white rounded-xl hover:bg-green-800 transition shadow-sm font-bold active:transform active:scale-[0.99]"
+                className="w-full h-12 text-sm font-bold bg-green-700 text-white rounded-xl hover:bg-green-800 transition shadow-sm active:transform active:scale-[0.99] flex items-center justify-center gap-2"
               >
-                💵 Convertir a Venta Directa
+                <DollarSign className="w-5 h-5" /> Convertir a Venta Directa
               </button>
             )}
 
-            {/* Línea de tiempo / Historial de estados */}
             <div className="space-y-3">
               <h3 className="text-xs font-bold uppercase text-stone-600 tracking-wider">
                 Bitácora / Historial del pedido
@@ -476,7 +397,7 @@ export default function OrderDetailModal({
                                   h.previous_status as OrderStatus
                                 ] ?? h.previous_status}
                               </span>
-                              <span className="text-stone-300 text-xs">→</span>
+                              <ArrowRight className="w-3 h-3 text-stone-300" />
                             </>
                           )}
                           <span className="text-xs font-bold text-[#472D20] bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#EFE9DD]">
@@ -485,12 +406,14 @@ export default function OrderDetailModal({
                           </span>
                         </div>
                         {h.comments && (
-                          <p className="text-xs text-stone-600 mt-1.5 bg-stone-50 p-2 rounded border border-stone-100 font-medium">
-                            💬 {h.comments}
+                          <p className="text-xs text-stone-600 mt-1.5 bg-stone-50 p-2 rounded border border-stone-100 font-medium flex items-center gap-1.5">
+                            <MessageSquare className="w-3.5 h-3.5 text-stone-400 shrink-0" />{" "}
+                            {h.comments}
                           </p>
                         )}
                       </div>
-                      <p className="text-[11px] font-bold text-stone-400 whitespace-nowrap bg-stone-100 px-2 py-0.5 rounded-full">
+                      <p className="text-[11px] font-bold text-stone-400 whitespace-nowrap bg-stone-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
                         {new Date(h.changed_at).toLocaleString("es-MX", {
                           timeZone: "America/Mexico_City",
                           year: "numeric",
@@ -509,7 +432,6 @@ export default function OrderDetailModal({
         </div>
       </div>
 
-      {/* Modal secundario para confirmación de transacciones contables */}
       <ConfirmModal
         isOpen={confirmarConvertir}
         title="Convertir a venta"
